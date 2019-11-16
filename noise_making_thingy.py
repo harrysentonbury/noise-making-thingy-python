@@ -1,5 +1,4 @@
 
-
 import numpy as np
 import sounddevice as sd
 import time
@@ -15,19 +14,16 @@ def play():
         return np.sin(x * trem_speed) * trem_amount_value + trem_adder
 
     def ramp_2_osc():
-        return np.sin(x * freq + ramp_2 * np.sin(fm * x))
+        return ramp_2 * np.sin(fm * x)
 
     def lfo_osc_wave():
-        return np.sin(x * freq + lfo * np.sin(fm * x))
+        return lfo * np.sin(fm * x)
 
     def ramp_2_fm2():
         return ramp_2 * np.sin(fm2 * x)
 
     def sine_wave(mod):
         y = np.sin(x * freq + mod)
-
-    def triangle(mod):
-        y = 2 / np.pi * np.arcsin(np.sin(x * freq + mod))
         return y
 
     def noise(ramp):
@@ -61,16 +57,16 @@ def play():
 
     # wave selector
     if choose is False and choose_2 is False:
-        waveform = lfo_osc_wave()
+        waveform = sine_wave(lfo_osc_wave())
     if choose is True and choose_2 is False:
-        waveform = ramp_2_osc()
+        waveform = sine_wave(ramp_2_osc())
 
     if choose is True and choose_2 is True:
         waveform = np.sin(x * freq + ramp_2 * np.sin(
-                          fm * x) + ramp_2_fm2())
+            fm * x) + ramp_2_fm2())
     if choose is False and choose_2 is True:
         waveform = np.sin(x * freq + lfo * np.sin(
-                          fm * x) + ramp_2_fm2())
+            fm * x) + ramp_2_fm2())
 
     if choose_3 is 1:
         waveform = waveform + noise(ramp_1)
@@ -89,7 +85,7 @@ def play():
     sd.play(waveform, sample_rate)
     time.sleep(duration)
     sd.stop()
-    play_button.update()
+    play_button.update()                    # Enable play again.
     play_button.config(text="Play", state="normal")
 
 # toggle generators for buttons.
@@ -172,6 +168,7 @@ g3 = gen_3()
 
 master = tk.Tk()
 master.geometry("750x500")
+
 bool_choice = tk.BooleanVar()
 bool_choice.set(True)
 bool_choice_1 = tk.BooleanVar()
@@ -194,17 +191,30 @@ trem_speed_label = tk.Label(master, text='Trem Speed')
 vol_label = tk.Label(master, text='Volume')
 trem_amount_label = tk.Label(master, text='Trem Amount')
 
-scale_duration = tk.Scale(master, from_=0.5, to=20, resolution=0.25, orient=tk.HORIZONTAL)
-scale_freq = tk.Scale(master, from_=50, to=510, resolution=10, orient=tk.HORIZONTAL)
-scale_fm = tk.Scale(master, from_=10, to=250, resolution=5, orient=tk.HORIZONTAL)
-scale_fm2 = tk.Scale(master, from_=40, to=400, resolution=5, orient=tk.HORIZONTAL)
-scale_speed = tk.Scale(master, from_=0.05, to=5, resolution=0.05, orient=tk.HORIZONTAL)
-scale_lfo_amount = tk.Scale(master, from_=1.0, to=10, resolution=0.2, orient=tk.HORIZONTAL)
-scale_ramp_amount = tk.Scale(master, from_=1.0, to=8, resolution=0.2, orient=tk.HORIZONTAL)
+scale_duration = tk.Scale(master, from_=0.5, to=20, resolution=0.25,
+                          orient=tk.HORIZONTAL, length=200)
+scale_freq = tk.Scale(master, from_=50, to=510, resolution=10, orient=tk.HORIZONTAL, length=200)
+scale_fm = tk.Scale(master, from_=10, to=250, resolution=5, orient=tk.HORIZONTAL, length=200)
+scale_fm2 = tk.Scale(master, from_=40, to=400, resolution=5, orient=tk.HORIZONTAL, length=200)
+scale_speed = tk.Scale(master, from_=0.05, to=5, resolution=0.05, orient=tk.HORIZONTAL, length=200)
+scale_lfo_amount = tk.Scale(master, from_=1.0, to=10, resolution=0.2,
+                            orient=tk.HORIZONTAL, length=200)
+scale_ramp_amount = tk.Scale(master, from_=1.0, to=8, resolution=0.2,
+                             orient=tk.HORIZONTAL, length=200)
+scale_duration.set(4.0)
+scale_freq.set(440)
+scale_fm.set(60)
+scale_speed.set(1.0)
 
-scale_vol = tk.Scale(master, from_=0.0, to=1.0, resolution=0.1, orient=tk.HORIZONTAL)
-scale_trem_speed = tk.Scale(master, from_=0.5, to=15, resolution=0.2, orient=tk.HORIZONTAL)
-scale_trem_amount = tk.Scale(master, from_=0.0, to=1.0, resolution=0.1, orient=tk.HORIZONTAL)
+
+scale_vol = tk.Scale(master, from_=0.0, to=1.0, resolution=0.1, orient=tk.HORIZONTAL, length=200)
+scale_trem_speed = tk.Scale(master, from_=0.5, to=15, resolution=0.2,
+                            orient=tk.HORIZONTAL, length=150)
+scale_trem_amount = tk.Scale(master, from_=0.0, to=1.0, resolution=0.1,
+                             orient=tk.HORIZONTAL, length=150)
+scale_vol.set(0.5)
+scale_trem_speed.set(6.0)
+scale_trem_amount.set(0.5)
 
 play_button = tk.Button(master, text='Play', command=play)
 log_ramp_button = tk.Button(master, bg="#728C00", fg="white", text="Log Ramp", command=choise)
