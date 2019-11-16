@@ -23,6 +23,11 @@ def play():
     def ramp_2_fm2():
         return ramp_2 * np.sin(fm2 * x)
 
+    def noise():
+        y = np.random.normal(0, 0.4, array_size,)
+        y = np.clip(y, a_min=-1.0, a_max=1.0) * (ramp_1 * 0.1)
+        return y
+
     freq = float(scale_freq.get())
     fm = float(scale_fm.get())
     fm2 = float(scale_fm2.get())
@@ -35,11 +40,14 @@ def play():
     trem_amount_value = float(scale_trem_amount.get())
 
     x = np.linspace(0, duration * 2 * np.pi, duration * sample_rate)    # f(x)
+    array_size = int(duration * sample_rate)
     # get tk variables from lines 145 -> 150
     choose = bool_choice.get()
     choose_1 = bool_choice_1.get()
     choose_2 = bool_choice_2.get()
+    choose_3 = bool_choice_3.get()
 
+    ramp_1 = np.logspace(1, 0, duration * sample_rate)
     ramp_2 = np.logspace(0, 1, duration * sample_rate) * ramp_amount
     lfo = np.sin(x * speed) * lfo_amount
 
@@ -55,6 +63,9 @@ def play():
     if choose is False and choose_2 is True:
         waveform = np.sin(x * freq + lfo * np.sin(
                           fm * x) + ramp_2_fm2())
+
+    if choose_3 is True:
+        waveform = waveform + noise()
 
     if choose_1 is True:
         waveform = waveform * tremelo()
@@ -93,6 +104,13 @@ def gen_2():
         yield n
         n = not n
 
+
+def gen_3():
+    n = True
+    while True:
+        yield n
+        n = not n
+
 # Toggling wave selector bool and setting button colors
 
 
@@ -120,12 +138,21 @@ def choise_2():
         fm2_button.config(bg="#000000", fg="white", text="FM2 Off")
 
 
+def choise_3():
+    bool_choice_3.set(next(g3))
+    if bool_choice_3.get() is True:
+        noise_button.config(bg="#728C00", fg="white", text="Noise On")
+    if bool_choice_3.get() is False:
+        noise_button.config(bg="#000000", fg="white", text="Noise Off")
+
+
 sample_rate = 44100
 attenuation = 0.3
 
 g = gen()
 g1 = gen_1()
 g2 = gen_2()
+g3 = gen_3()
 
 master = tk.Tk()
 master.geometry("750x500")
@@ -135,6 +162,8 @@ bool_choice_1 = tk.BooleanVar()
 bool_choice_1.set(False)
 bool_choice_2 = tk.BooleanVar()
 bool_choice_2.set(False)
+bool_choice_3 = tk.BooleanVar()
+bool_choice_3.set(False)
 
 
 duration_labal = tk.Label(master, text='Duration')
@@ -165,6 +194,7 @@ play_button = tk.Button(master, text='Play', command=play)
 log_ramp_button = tk.Button(master, bg="#728C00", fg="white", text="Log Ramp", command=choise)
 tremelo_button = tk.Button(master, bg="#000000", fg="white", text='Trem Off', command=choise_1)
 fm2_button = tk.Button(master, bg="#000000", fg="white", text='FM2 Off', command=choise_2)
+noise_button = tk.Button(master, bg="#000000", fg="white", text='Noise', command=choise_3)
 
 duration_labal.grid(column=0, row=0)
 freq_labal.grid(column=0, row=1)
@@ -190,6 +220,7 @@ play_button.grid(column=2, row=0)
 log_ramp_button.grid(column=2, row=1)
 tremelo_button.grid(column=2, row=2)
 fm2_button.grid(column=2, row=3)
+noise_button.grid(column=2, row=4)
 
 trem_speed_label.grid(column=3, row=6)
 scale_trem_speed.grid(column=4, row=6)
