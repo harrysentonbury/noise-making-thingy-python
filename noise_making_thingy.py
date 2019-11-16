@@ -23,9 +23,16 @@ def play():
     def ramp_2_fm2():
         return ramp_2 * np.sin(fm2 * x)
 
-    def noise():
+    def sine_wave(mod):
+        y = np.sin(x * freq + mod)
+
+    def triangle(mod):
+        y = 2 / np.pi * np.arcsin(np.sin(x * freq + mod))
+        return y
+
+    def noise(ramp):
         y = np.random.normal(0, 0.4, array_size,)
-        y = np.clip(y, a_min=-1.0, a_max=1.0) * (ramp_1 * 0.1)
+        y = np.clip(y, a_min=-1.0, a_max=1.0) * (ramp * 0.1)
         return y
 
     freq = float(scale_freq.get())
@@ -45,8 +52,9 @@ def play():
     choose = bool_choice.get()
     choose_1 = bool_choice_1.get()
     choose_2 = bool_choice_2.get()
-    choose_3 = bool_choice_3.get()
+    choose_3 = int_choice_3.get()
 
+    ramp_0 = np.logspace(0, 1, duration * sample_rate)
     ramp_1 = np.logspace(1, 0, duration * sample_rate)
     ramp_2 = np.logspace(0, 1, duration * sample_rate) * ramp_amount
     lfo = np.sin(x * speed) * lfo_amount
@@ -64,8 +72,11 @@ def play():
         waveform = np.sin(x * freq + lfo * np.sin(
                           fm * x) + ramp_2_fm2())
 
-    if choose_3 is True:
-        waveform = waveform + noise()
+    if choose_3 is 1:
+        waveform = waveform + noise(ramp_1)
+
+    if choose_3 is 2:
+        waveform = waveform + noise(ramp_0)
 
     if choose_1 is True:
         waveform = waveform * tremelo()
@@ -106,10 +117,13 @@ def gen_2():
 
 
 def gen_3():
-    n = True
+    first_val = 0
+    n = 1
     while True:
         yield n
-        n = not n
+        n += 1
+        if n == 3:
+            n = first_val
 
 # Toggling wave selector bool and setting button colors
 
@@ -139,11 +153,13 @@ def choise_2():
 
 
 def choise_3():
-    bool_choice_3.set(next(g3))
-    if bool_choice_3.get() is True:
-        noise_button.config(bg="#728C00", fg="white", text="Noise On")
-    if bool_choice_3.get() is False:
+    int_choice_3.set(next(g3))
+    if int_choice_3.get() is 1:
+        noise_button.config(bg="#728C00", fg="white", text="Noise >")
+    if int_choice_3.get() is 0:
         noise_button.config(bg="#000000", fg="white", text="Noise Off")
+    if int_choice_3.get() is 2:
+        noise_button.config(bg="#000000", fg="white", text="Noise <")
 
 
 sample_rate = 44100
@@ -162,8 +178,8 @@ bool_choice_1 = tk.BooleanVar()
 bool_choice_1.set(False)
 bool_choice_2 = tk.BooleanVar()
 bool_choice_2.set(False)
-bool_choice_3 = tk.BooleanVar()
-bool_choice_3.set(False)
+int_choice_3 = tk.IntVar()
+int_choice_3.set(0)
 
 
 duration_labal = tk.Label(master, text='Duration')
