@@ -56,15 +56,15 @@ def play():
     lfo = np.sin(x * speed) * lfo_amount
 
     # wave selector
-    if choose is False and choose_2 is False:
-        waveform = sine_wave(lfo_osc_wave())
     if choose is True and choose_2 is False:
+        waveform = sine_wave(lfo_osc_wave())
+    if choose is False and choose_2 is False:
         waveform = sine_wave(ramp_2_osc())
 
-    if choose is True and choose_2 is True:
+    if choose is False and choose_2 is True:
         waveform = np.sin(x * freq + ramp_2 * np.sin(
             fm * x) + ramp_2_fm2())
-    if choose is False and choose_2 is True:
+    if choose is True and choose_2 is True:
         waveform = np.sin(x * freq + lfo * np.sin(
             fm * x) + ramp_2_fm2())
 
@@ -88,24 +88,10 @@ def play():
     play_button.update()                    # Enable play again.
     play_button.config(text="Play", state="normal")
 
-# toggle generators for buttons.
-
-
-def gen():
-    n = False
-    while True:
-        yield n
-        n = not n
+# generators for buttons.
 
 
 def gen_1():
-    n = True
-    while True:
-        yield n
-        n = not n
-
-
-def gen_2():
     n = True
     while True:
         yield n
@@ -126,9 +112,9 @@ def gen_3():
 
 def choise():
     bool_choice.set(next(g))
-    if bool_choice.get() is True:
-        log_ramp_button.config(bg="#728C00", fg="white", text="Log Ramp")
     if bool_choice.get() is False:
+        log_ramp_button.config(bg="#728C00", fg="white", text="Log Ramp")
+    if bool_choice.get() is True:
         log_ramp_button.config(bg="#000000", fg="white", text="Sin LFO")
 
 
@@ -161,16 +147,16 @@ def choise_3():
 sample_rate = 44100
 attenuation = 0.3
 
-g = gen()
+g = gen_1()
 g1 = gen_1()
-g2 = gen_2()
+g2 = gen_1()
 g3 = gen_3()
 
 master = tk.Tk()
 master.geometry("750x500")
 
 bool_choice = tk.BooleanVar()
-bool_choice.set(True)
+bool_choice.set(False)
 bool_choice_1 = tk.BooleanVar()
 bool_choice_1.set(False)
 bool_choice_2 = tk.BooleanVar()
