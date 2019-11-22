@@ -17,10 +17,10 @@ def play():
         return ramp_2 * np.sin(fm * x)
 
     def lfo_osc_wave():
-        return lfo * np.sin(fm * x)
+        return lfo * np.sin(fm * x) + 1
 
-    def ramp_2_fm2():
-        return ramp_2 * np.sin(fm2 * x)
+    def ramp_3_fm2():
+        return ramp_3 * np.sin(fm2 * x)
 
     def sine_wave(mod):
         y = np.sin(x * freq + mod)
@@ -50,9 +50,11 @@ def play():
     choose_2 = bool_choice_2.get()
     choose_3 = int_choice_3.get()
 
-    ramp_0 = np.logspace(0, 1, duration * sample_rate)
-    ramp_1 = np.logspace(1, 0, duration * sample_rate)
+    ramp_0 = np.logspace(0, 1, duration * sample_rate, base=3)
+    ramp_1 = np.logspace(1, 0, duration * sample_rate, base=3)
     ramp_2 = np.logspace(0, 1, duration * sample_rate) * ramp_amount
+    ramp_3 = np.concatenate((np.logspace(1, 0, duration * sample_rate/2),
+                             np.ones(int(duration * sample_rate/2))))
     lfo = np.sin(x * speed) * lfo_amount
 
     # wave selector
@@ -63,10 +65,10 @@ def play():
 
     if choose is False and choose_2 is True:
         waveform = np.sin(x * freq + ramp_2 * np.sin(
-            fm * x) + ramp_2_fm2())
+            fm * x + ramp_3_fm2()))
     if choose is True and choose_2 is True:
         waveform = np.sin(x * freq + lfo * np.sin(
-            fm * x) + ramp_2_fm2())
+            fm * x + ramp_3_fm2()))
 
     if choose_3 is 1:
         waveform = waveform + noise(ramp_1)
