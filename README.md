@@ -9,4 +9,6 @@ Could not decide on tremelo or ring modulator so its sort of a highbred...for no
 Theres other sliders for sliding too.
 There is also a crappy white noise button. Don't bother clicking that one.
 
+python3
+
 dependances = numpy, sounddevice, tkinter.
