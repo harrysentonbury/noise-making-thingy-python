@@ -17,7 +17,7 @@ def play():
         return ramp_2 * np.sin(fm * x)
 
     def lfo_osc_wave():
-        return lfo * np.sin(fm * x) + 1
+        return lfo * np.sin(fm * x)
 
     def ramp_3_fm2():
         return ramp_3 * np.sin(fm2 * x)
@@ -41,6 +41,7 @@ def play():
     trem_speed = float(scale_trem_speed.get())
     vol = float(scale_vol.get())
     trem_amount_value = float(scale_trem_amount.get())
+    ramp3_divizor = float(scale_ramp3_size.get())
 
     x = np.linspace(0, duration * 2 * np.pi, duration * sample_rate)    # f(x)
     array_size = int(duration * sample_rate)
@@ -50,11 +51,14 @@ def play():
     choose_2 = bool_choice_2.get()
     choose_3 = int_choice_3.get()
 
-    ramp_0 = np.logspace(0, 1, duration * sample_rate, base=3)
-    ramp_1 = np.logspace(1, 0, duration * sample_rate, base=3)
+    ramp3_size = int(sample_rate // ramp3_divizor)
+    ones3_size = sample_rate - ramp3_size
+
+    ramp_0 = np.logspace(0, 1, duration * sample_rate, base=5)
+    ramp_1 = np.logspace(1, 0, duration * sample_rate, base=5)
     ramp_2 = np.logspace(0, 1, duration * sample_rate) * ramp_amount
-    ramp_3 = np.concatenate((np.logspace(1, 0, duration * sample_rate/2),
-                             np.ones(int(duration * sample_rate/2))))
+    ramp_3 = np.concatenate((np.logspace(1, 0, duration * ramp3_size),
+                             np.ones(int(duration * ones3_size))))
     lfo = np.sin(x * speed) * lfo_amount
 
     # wave selector
@@ -174,6 +178,7 @@ fm2_labal = tk.Label(master, text='Fm2')
 speed_labal = tk.Label(master, text='LFO Speed')
 lfo_amount_label = tk.Label(master, text='LFO Amount')
 ramp_amount_label = tk.Label(master, text='Ramp Amount')
+ramp3_size_label = tk.Label(master, text='Ramp3 Time Ratio')
 
 trem_speed_label = tk.Label(master, text='Trem Speed')
 vol_label = tk.Label(master, text='Volume')
@@ -185,14 +190,18 @@ scale_freq = tk.Scale(master, from_=50, to=510, resolution=10, orient=tk.HORIZON
 scale_fm = tk.Scale(master, from_=10, to=250, resolution=5, orient=tk.HORIZONTAL, length=200)
 scale_fm2 = tk.Scale(master, from_=40, to=400, resolution=5, orient=tk.HORIZONTAL, length=200)
 scale_speed = tk.Scale(master, from_=0.05, to=5, resolution=0.05, orient=tk.HORIZONTAL, length=200)
-scale_lfo_amount = tk.Scale(master, from_=1.0, to=10, resolution=0.2,
+scale_lfo_amount = tk.Scale(master, from_=1.0, to=5.0, resolution=0.2,
                             orient=tk.HORIZONTAL, length=200)
 scale_ramp_amount = tk.Scale(master, from_=1.0, to=8, resolution=0.2,
                              orient=tk.HORIZONTAL, length=200)
+scale_ramp3_size = tk.Scale(master, from_=2, to=10, resolution=0.5,
+                            orient=tk.HORIZONTAL, length=200)
 scale_duration.set(4.0)
 scale_freq.set(440)
 scale_fm.set(60)
+scale_fm2.set(300)
 scale_speed.set(1.0)
+scale_ramp3_size.set(2)
 
 
 scale_vol = tk.Scale(master, from_=0.0, to=1.0, resolution=0.1, orient=tk.HORIZONTAL, length=200)
@@ -200,7 +209,7 @@ scale_trem_speed = tk.Scale(master, from_=0.5, to=15, resolution=0.2,
                             orient=tk.HORIZONTAL, length=150)
 scale_trem_amount = tk.Scale(master, from_=0.0, to=1.0, resolution=0.1,
                              orient=tk.HORIZONTAL, length=150)
-scale_vol.set(0.5)
+scale_vol.set(0.7)
 scale_trem_speed.set(6.0)
 scale_trem_amount.set(0.5)
 
@@ -217,8 +226,9 @@ fm2_labal.grid(column=0, row=3)
 speed_labal.grid(column=0, row=4)
 lfo_amount_label.grid(column=0, row=5)
 ramp_amount_label.grid(column=0, row=6)
+ramp3_size_label.grid(column=0, row=7)
 
-vol_label.grid(column=0, row=8)
+vol_label.grid(column=0, row=9)
 
 scale_duration.grid(column=1, row=0)
 scale_freq.grid(column=1, row=1)
@@ -227,8 +237,9 @@ scale_fm2.grid(column=1, row=3)
 scale_speed.grid(column=1, row=4)
 scale_lfo_amount.grid(column=1, row=5)
 scale_ramp_amount.grid(column=1, row=6)
+scale_ramp3_size.grid(column=1, row=7)
 
-scale_vol.grid(column=1, row=8)
+scale_vol.grid(column=1, row=9)
 
 play_button.grid(column=2, row=0)
 log_ramp_button.grid(column=2, row=1)
@@ -236,9 +247,9 @@ tremelo_button.grid(column=2, row=2)
 fm2_button.grid(column=2, row=3)
 noise_button.grid(column=2, row=4)
 
-trem_speed_label.grid(column=3, row=6)
-scale_trem_speed.grid(column=4, row=6)
-trem_amount_label.grid(column=3, row=7)
-scale_trem_amount.grid(column=4, row=7)
+trem_speed_label.grid(column=3, row=7)
+scale_trem_speed.grid(column=4, row=7)
+trem_amount_label.grid(column=3, row=8)
+scale_trem_amount.grid(column=4, row=8)
 
 master.mainloop()
