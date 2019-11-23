@@ -1,4 +1,6 @@
 
+""" Python thingy, a bit like a synthesizer """
+
 import numpy as np
 import sounddevice as sd
 import time
@@ -181,7 +183,7 @@ def choise_3():
 
 
 sample_rate = 44100
-attenuation = 0.3
+attenuation = 0.2
 
 g = gen_1()
 g1 = gen_1()
@@ -206,12 +208,12 @@ bool_choice_wave.set(False)
 
 duration_labal = tk.Label(master, text='Duration')
 freq_labal = tk.Label(master, text='Frequency')
-fm_labal = tk.Label(master, text='Fm1')
-fm2_labal = tk.Label(master, text='Fm2')
-speed_labal = tk.Label(master, text='LFO Speed')
-lfo_amount_label = tk.Label(master, text='LFO Amount')
-ramp_amount_label = tk.Label(master, text='Ramp Amount')
-ramp3_size_label = tk.Label(master, text='Ramp3 Time Ratio')
+fm_labal = tk.Label(master, text='FM 1')
+fm2_labal = tk.Label(master, text='FM 2')
+speed_labal = tk.Label(master, text='Sin LFO Speed')
+lfo_amount_label = tk.Label(master, text='Sin LFO Amount')
+ramp_amount_label = tk.Label(master, text='FM 1 Ramp Amount')
+ramp3_size_label = tk.Label(master, text='FM 2 Ramp Time Ratio')
 wave_label = tk.Label(master, text='Wave Shape')
 
 trem_speed_label = tk.Label(master, text='Trem Speed')
@@ -231,7 +233,7 @@ scale_ramp_amount = tk.Scale(master, from_=1.0, to=8, resolution=0.2,
 scale_ramp3_size = tk.Scale(master, from_=1.5, to=10, resolution=0.5,
                             orient=tk.HORIZONTAL, length=200)
 scale_duration.set(4.0)
-scale_freq.set(440)
+scale_freq.set(360)
 scale_fm.set(60)
 scale_fm2.set(300)
 scale_speed.set(1.0)
