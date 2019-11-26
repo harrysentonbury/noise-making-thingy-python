@@ -5,6 +5,7 @@ import numpy as np
 import sounddevice as sd
 import time
 import tkinter as tk
+from tkinter import messagebox
 
 
 def play():
@@ -48,6 +49,7 @@ def play():
     vol = float(scale_vol.get())
     trem_amount_value = float(scale_trem_amount.get())
     ramp3_divizor = float(scale_ramp3_size.get())
+    fade_size = 5000
 
     x = np.linspace(0, duration * 2 * np.pi, duration * sample_rate)    # f(x)
     array_size = int(duration * sample_rate)
@@ -66,6 +68,10 @@ def play():
     ramp_2 = np.logspace(0, 1, duration * sample_rate) * ramp_amount
     ramp_3 = np.concatenate((np.logspace(1, 0, duration * ramp3_size),
                              np.ones(int(duration * ones3_size))))
+    fade_out = np.ones(len(x))
+    fade_ramp = np.linspace(1, 0, fade_size)
+    fade_out[-len(fade_ramp):] = fade_ramp
+
     lfo = np.sin(x * speed) * lfo_amount
 
     # wave selector
@@ -107,7 +113,7 @@ def play():
     if choose_1 is True:
         waveform = waveform * tremelo()
 
-    waveform = waveform * attenuation * vol
+    waveform = waveform * fade_out * attenuation * vol
 
     # print(max(waveform))
     # print(min(waveform))
@@ -182,6 +188,11 @@ def choise_3():
         noise_button.config(bg="#728C00", fg="white", text="Noise <")
 
 
+def on_closing():
+    if messagebox.askokcancel("Quit", "Do you want to quit? "):
+        master.destroy()
+
+
 sample_rate = 44100
 attenuation = 0.2
 
@@ -192,7 +203,7 @@ g3 = gen_3()
 g_wave = gen_1()
 
 master = tk.Tk()
-master.geometry("800x500")
+master.geometry("900x600")
 
 bool_choice = tk.BooleanVar()
 bool_choice.set(False)
@@ -207,9 +218,9 @@ bool_choice_wave.set(False)
 
 
 duration_labal = tk.Label(master, text='Duration')
-freq_labal = tk.Label(master, text='Frequency')
-fm_labal = tk.Label(master, text='FM 1')
-fm2_labal = tk.Label(master, text='FM 2')
+freq_labal = tk.Label(master, text='Frequency Hz')
+fm_labal = tk.Label(master, text='FM 1 Hz')
+fm2_labal = tk.Label(master, text='FM 2 Hz')
 speed_labal = tk.Label(master, text='Sin LFO Speed')
 lfo_amount_label = tk.Label(master, text='Sin LFO Amount')
 ramp_amount_label = tk.Label(master, text='FM 1 Ramp Amount')
@@ -218,20 +229,21 @@ wave_label = tk.Label(master, text='Wave Shape')
 
 trem_speed_label = tk.Label(master, text='Trem Speed')
 vol_label = tk.Label(master, text='Volume')
-trem_amount_label = tk.Label(master, text='Trem Amount')
+trem_amount_label = tk.Label(master, text='Amount Trem')
+ring_label = tk.Label(master, text='Ring')
 
-scale_duration = tk.Scale(master, from_=0.5, to=20, resolution=0.25,
-                          orient=tk.HORIZONTAL, length=200)
-scale_freq = tk.Scale(master, from_=50, to=510, resolution=10, orient=tk.HORIZONTAL, length=200)
-scale_fm = tk.Scale(master, from_=10, to=250, resolution=5, orient=tk.HORIZONTAL, length=200)
-scale_fm2 = tk.Scale(master, from_=40, to=400, resolution=5, orient=tk.HORIZONTAL, length=200)
-scale_speed = tk.Scale(master, from_=0.05, to=5, resolution=0.05, orient=tk.HORIZONTAL, length=200)
-scale_lfo_amount = tk.Scale(master, from_=1.0, to=5.0, resolution=0.2,
-                            orient=tk.HORIZONTAL, length=200)
-scale_ramp_amount = tk.Scale(master, from_=1.0, to=8, resolution=0.2,
-                             orient=tk.HORIZONTAL, length=200)
-scale_ramp3_size = tk.Scale(master, from_=1.5, to=10, resolution=0.5,
-                            orient=tk.HORIZONTAL, length=200)
+scale_duration = tk.Scale(master, from_=0.5, to=60, resolution=0.25,
+                          orient=tk.HORIZONTAL, length=250)
+scale_freq = tk.Scale(master, from_=50, to=510, resolution=5, orient=tk.HORIZONTAL, length=250)
+scale_fm = tk.Scale(master, from_=10, to=250, resolution=5, orient=tk.HORIZONTAL, length=250)
+scale_fm2 = tk.Scale(master, from_=40, to=400, resolution=5, orient=tk.HORIZONTAL, length=250)
+scale_speed = tk.Scale(master, from_=0.05, to=5, resolution=0.05, orient=tk.HORIZONTAL, length=250)
+scale_lfo_amount = tk.Scale(master, from_=1.0, to=5.0, resolution=0.1,
+                            orient=tk.HORIZONTAL, length=250)
+scale_ramp_amount = tk.Scale(master, from_=1.0, to=8, resolution=0.1,
+                             orient=tk.HORIZONTAL, length=250)
+scale_ramp3_size = tk.Scale(master, from_=1.5, to=10, resolution=0.1,
+                            orient=tk.HORIZONTAL, length=250)
 scale_duration.set(4.0)
 scale_freq.set(360)
 scale_fm.set(60)
@@ -240,18 +252,18 @@ scale_speed.set(1.0)
 scale_ramp3_size.set(2)
 
 
-scale_vol = tk.Scale(master, from_=0.0, to=1.0, resolution=0.1, orient=tk.HORIZONTAL, length=200)
+scale_vol = tk.Scale(master, from_=0.0, to=1.0, resolution=0.01, orient=tk.HORIZONTAL, length=250)
 scale_trem_speed = tk.Scale(master, from_=0.5, to=15, resolution=0.2,
-                            orient=tk.HORIZONTAL, length=150)
-scale_trem_amount = tk.Scale(master, from_=0.0, to=1.0, resolution=0.1,
-                             orient=tk.HORIZONTAL, length=150)
+                            orient=tk.HORIZONTAL, length=200)
+scale_trem_amount = tk.Scale(master, from_=0.0, to=1.0, resolution=0.01,
+                             orient=tk.HORIZONTAL, length=200)
 scale_vol.set(0.7)
 scale_trem_speed.set(6.0)
 scale_trem_amount.set(0.5)
 
 play_button = tk.Button(master, text='Play', bg='#0ba4a4', height=3, width=7, command=play)
 log_ramp_button = tk.Button(master, bg="#728C00", fg="white",
-                            text="Log Ramp", width=7, command=choise)
+                            text="FM 1 Ramp", width=7, command=choise)
 tremelo_button = tk.Button(master, bg="#000000", fg="white",
                            text='Trem Off', width=7, command=choise_1)
 fm2_button = tk.Button(master, bg="#000000", fg="white", text='FM2 Off', width=7, command=choise_2)
@@ -268,6 +280,7 @@ lfo_amount_label.grid(column=0, row=5)
 ramp_amount_label.grid(column=0, row=6)
 ramp3_size_label.grid(column=0, row=7)
 wave_label.grid(column=3, row=0)
+ring_label.grid(column=5, row=8)
 
 vol_label.grid(column=0, row=9)
 
@@ -294,4 +307,5 @@ scale_trem_speed.grid(column=4, row=7)
 trem_amount_label.grid(column=3, row=8)
 scale_trem_amount.grid(column=4, row=8)
 
+master.protocol("WM_DELETE_WINDOW", on_closing)
 master.mainloop()
