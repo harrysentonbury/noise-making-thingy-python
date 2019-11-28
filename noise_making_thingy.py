@@ -34,7 +34,7 @@ def play():
         return y
 
     def noise(ramp):
-        y = np.random.normal(0, 0.4, array_size,)
+        y = np.random.normal(0, 0.4, len(x))
         y = np.clip(y, a_min=-1.0, a_max=1.0) * (ramp * 0.1)
         return y
 
@@ -52,7 +52,7 @@ def play():
     fade_size = 5000
 
     x = np.linspace(0, duration * 2 * np.pi, duration * sample_rate)    # f(x)
-    array_size = int(duration * sample_rate)
+
     # get tk variables from lines 145 -> 150
     choose = bool_choice.get()
     choose_1 = bool_choice_1.get()
@@ -60,14 +60,14 @@ def play():
     choose_3 = int_choice_3.get()
     choose_wave = bool_choice_wave.get()
 
-    ramp3_size = int(sample_rate // ramp3_divizor)
-    ones3_size = sample_rate - ramp3_size
+    # ramp3_size =
+    ramp_3 = np.ones(len(x))
+    ramp_3_ramp = np.logspace(1, 0, int(duration * sample_rate // ramp3_divizor))
 
     ramp_0 = np.logspace(0, 1, duration * sample_rate, base=5)
     ramp_1 = np.logspace(1, 0, duration * sample_rate, base=5)
     ramp_2 = np.logspace(0, 1, duration * sample_rate) * ramp_amount
-    ramp_3 = np.concatenate((np.logspace(1, 0, duration * ramp3_size),
-                             np.ones(int(duration * ones3_size))))
+    ramp_3[: len(ramp_3_ramp)] = ramp_3_ramp
     fade_out = np.ones(len(x))
     fade_ramp = np.linspace(1, 0, fade_size)
     fade_out[-len(fade_ramp):] = fade_ramp
@@ -115,12 +115,7 @@ def play():
 
     waveform = waveform * fade_out * attenuation * vol
 
-    # print(max(waveform))
-    # print(min(waveform))
-
     sd.play(waveform, sample_rate)
-    time.sleep(duration)
-    sd.stop()
     play_button.update()                    # Enable play again.
     play_button.config(text="Play", state="normal")
 
@@ -188,6 +183,10 @@ def choise_3():
         noise_button.config(bg="#728C00", fg="white", text="Noise <")
 
 
+def stop_it():
+    sd.stop()
+
+
 def on_closing():
     if messagebox.askokcancel("Quit", "Do you want to quit? "):
         master.destroy()
@@ -204,6 +203,7 @@ g_wave = gen_1()
 
 master = tk.Tk()
 master.geometry("900x600")
+master.title('Noise Making Thingy')
 
 bool_choice = tk.BooleanVar()
 bool_choice.set(False)
@@ -270,6 +270,7 @@ fm2_button = tk.Button(master, bg="#000000", fg="white", text='FM2 Off', width=7
 noise_button = tk.Button(master, bg="#000000", fg="white", text='Noise', width=6, command=choise_3)
 wave_button = tk.Button(master, bg="#000000", fg="white",
                         text='Sine', width=10, command=choise_wave)
+stop_button = tk.Button(master, bg="#728C00", fg="white", text='Stop', width=7, command=stop_it)
 
 duration_labal.grid(column=0, row=0)
 freq_labal.grid(column=0, row=1)
@@ -296,7 +297,8 @@ scale_ramp3_size.grid(column=1, row=7)
 scale_vol.grid(column=1, row=9)
 
 play_button.grid(column=2, row=0)
-log_ramp_button.grid(column=2, row=1)
+stop_button.grid(column=2, row=1)
+log_ramp_button.grid(column=2, row=6)
 tremelo_button.grid(column=2, row=2)
 fm2_button.grid(column=2, row=3)
 noise_button.grid(column=2, row=4)
