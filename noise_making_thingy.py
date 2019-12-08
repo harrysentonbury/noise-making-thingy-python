@@ -49,6 +49,7 @@ def play():
     vol = float(scale_vol.get())
     trem_amount_value = float(scale_trem_amount.get())
     ramp3_divizor = float(scale_ramp3_size.get())
+    roller = int(scale_roll.get())
     fade_size = 5000
 
     x = np.linspace(0, duration * 2 * np.pi, duration * sample_rate)    # f(x)
@@ -65,7 +66,7 @@ def play():
     ramp_3_ramp = np.logspace(1, 0, int(duration * sample_rate // ramp3_divizor))
 
     ramp_0 = np.logspace(0, 1, duration * sample_rate, base=5)
-    ramp_1 = np.logspace(1, 0, duration * sample_rate, base=5)
+    ramp_1 = np.logspace(1, -2, duration * sample_rate, base=5)
     ramp_2 = np.logspace(0, 1, duration * sample_rate) * ramp_amount
     ramp_3[: len(ramp_3_ramp)] = ramp_3_ramp
     fade_out = np.ones(len(x))
@@ -83,11 +84,15 @@ def play():
                 waveform = triangle(ramp_2_osc())
         if choose_2 is True:
             if choose is False:
-                waveform = 2 / np.pi * np.arcsin(np.sin(x * freq + ramp_2 * np.sin(
-                    fm * x + ramp_3_fm2())))
+                # waveform = 2 / np.pi * np.arcsin(np.sin(x * freq + ramp_2 * np.sin(
+                #     fm * x + ramp_3_fm2())))
+                waveform = 2 / np.pi * np.arcsin(np.sin(x * freq + ramp_2 * 2 / np.pi * np.arcsin(
+                                                 np.sin(x * fm + ramp_3_fm2()))))
             if choose is True:
-                waveform = 2 / np.pi * np.arcsin(np.sin(x * freq + lfo * np.sin(
-                    fm * x + ramp_3_fm2())))
+                # waveform = 2 / np.pi * np.arcsin(np.sin(x * freq + lfo * np.sin(
+                #     fm * x + ramp_3_fm2())))
+                waveform = 2 / np.pi * np.arcsin(np.sin(x * freq + lfo * 2 / np.pi * np.arcsin(
+                                                 np.sin(x * fm + ramp_3_fm2()))))
 
     if choose_wave is False:
         if choose_2 is False:
@@ -113,9 +118,12 @@ def play():
     if choose_1 is True:
         waveform = waveform * tremelo()
 
-    waveform = waveform * fade_out * attenuation * vol
+    waveform0 = waveform * fade_out * attenuation * vol
+    waveform1 = np.roll(waveform0, roller)
+    waveform1[:roller] = 0
+    waveform_stereo = np.vstack((waveform0, waveform1)).T
 
-    sd.play(waveform, sample_rate)
+    sd.play(waveform_stereo, sample_rate)
     play_button.update()                    # Enable play again.
     play_button.config(text="Play", state="normal")
 
@@ -231,19 +239,23 @@ trem_speed_label = tk.Label(master, text='Trem Speed')
 vol_label = tk.Label(master, text='Volume')
 trem_amount_label = tk.Label(master, text='Amount Trem')
 ring_label = tk.Label(master, text='Ring')
+roll_label = tk.Label(master, text='Delay')
 
 scale_duration = tk.Scale(master, from_=0.5, to=60, resolution=0.25,
                           orient=tk.HORIZONTAL, length=250)
 scale_freq = tk.Scale(master, from_=50, to=510, resolution=5, orient=tk.HORIZONTAL, length=250)
 scale_fm = tk.Scale(master, from_=10, to=250, resolution=5, orient=tk.HORIZONTAL, length=250)
 scale_fm2 = tk.Scale(master, from_=40, to=400, resolution=5, orient=tk.HORIZONTAL, length=250)
-scale_speed = tk.Scale(master, from_=0.05, to=5, resolution=0.05, orient=tk.HORIZONTAL, length=250)
+scale_speed = tk.Scale(master, from_=0.02, to=5, resolution=0.02,
+                       orient=tk.HORIZONTAL, length=250)
 scale_lfo_amount = tk.Scale(master, from_=1.0, to=5.0, resolution=0.1,
                             orient=tk.HORIZONTAL, length=250)
 scale_ramp_amount = tk.Scale(master, from_=1.0, to=8, resolution=0.1,
                              orient=tk.HORIZONTAL, length=250)
-scale_ramp3_size = tk.Scale(master, from_=1.5, to=10, resolution=0.1,
+scale_ramp3_size = tk.Scale(master, from_=1.3, to=10, resolution=0.1,
                             orient=tk.HORIZONTAL, length=250)
+scale_roll = tk.Scale(master, from_=0, to=4000, resolution=50, orient=tk.HORIZONTAL, length=250)
+
 scale_duration.set(4.0)
 scale_freq.set(360)
 scale_fm.set(60)
@@ -308,6 +320,8 @@ trem_speed_label.grid(column=3, row=7)
 scale_trem_speed.grid(column=4, row=7)
 trem_amount_label.grid(column=3, row=8)
 scale_trem_amount.grid(column=4, row=8)
+roll_label.grid(column=3, row=10)
+scale_roll.grid(column=4, row=10)
 
 master.protocol("WM_DELETE_WINDOW", on_closing)
 master.mainloop()
