@@ -50,7 +50,7 @@ def play():
     trem_amount_value = float(scale_trem_amount.get())
     ramp3_divizor = float(scale_ramp3_size.get())
     roller = int(scale_roll.get())
-    fade_size = 5000
+    fade_size = 5000 + int(duration * sample_rate * float(scale_fade.get()))
 
     x = np.linspace(0, duration * 2 * np.pi, duration * sample_rate)    # f(x)
 
@@ -69,9 +69,7 @@ def play():
     ramp_1 = np.logspace(1, -2, duration * sample_rate, base=5)
     ramp_2 = np.logspace(0, 1, duration * sample_rate) * ramp_amount
     ramp_3[: len(ramp_3_ramp)] = ramp_3_ramp
-    fade_out = np.ones(len(x))
-    fade_ramp = np.linspace(1, 0, fade_size)
-    fade_out[-len(fade_ramp):] = fade_ramp
+    fade_ramp = np.linspace(1, 0, fade_size if fade_size < 120000 else 120000)
 
     lfo = np.sin(x * speed) * lfo_amount
 
@@ -118,9 +116,11 @@ def play():
     if choose_1 is True:
         waveform = waveform * tremelo()
 
-    waveform0 = waveform * fade_out * attenuation * vol
+    waveform0 = waveform * attenuation * vol
     waveform1 = np.roll(waveform0, roller)
     waveform1[:roller] = 0
+    waveform0[- len(fade_ramp):] *= fade_ramp
+    waveform1[- len(fade_ramp):] *= fade_ramp
     waveform_stereo = np.vstack((waveform0, waveform1)).T
 
     sd.play(waveform_stereo, sample_rate)
@@ -234,6 +234,7 @@ lfo_amount_label = tk.Label(master, text='Sin LFO Amount')
 ramp_amount_label = tk.Label(master, text='FM 1 Ramp Amount')
 ramp3_size_label = tk.Label(master, text='FM 2 Ramp Time Ratio')
 wave_label = tk.Label(master, text='Wave Shape')
+fade_out_label = tk.Label(master, text='Fade Out')
 
 trem_speed_label = tk.Label(master, text='Trem Speed')
 vol_label = tk.Label(master, text='Volume')
@@ -241,8 +242,6 @@ trem_amount_label = tk.Label(master, text='Amount Trem')
 ring_label = tk.Label(master, text='Ring')
 roll_label = tk.Label(master, text='Delay')
 
-scale_duration = tk.Scale(master, from_=0.5, to=60, resolution=0.25,
-                          orient=tk.HORIZONTAL, length=250)
 scale_freq = tk.Scale(master, from_=50, to=510, resolution=5, orient=tk.HORIZONTAL, length=250)
 scale_fm = tk.Scale(master, from_=10, to=250, resolution=5, orient=tk.HORIZONTAL, length=250)
 scale_fm2 = tk.Scale(master, from_=40, to=400, resolution=5, orient=tk.HORIZONTAL, length=250)
@@ -254,7 +253,8 @@ scale_ramp_amount = tk.Scale(master, from_=1.0, to=8, resolution=0.1,
                              orient=tk.HORIZONTAL, length=250)
 scale_ramp3_size = tk.Scale(master, from_=1.3, to=10, resolution=0.1,
                             orient=tk.HORIZONTAL, length=250)
-scale_roll = tk.Scale(master, from_=0, to=4000, resolution=50, orient=tk.HORIZONTAL, length=250)
+scale_duration = tk.Scale(master, from_=0.5, to=160, resolution=0.5,
+                          orient=tk.HORIZONTAL, length=650, troughcolor='#848884')
 
 scale_duration.set(4.0)
 scale_freq.set(360)
@@ -264,11 +264,14 @@ scale_speed.set(1.0)
 scale_ramp3_size.set(2)
 
 
-scale_vol = tk.Scale(master, from_=0.0, to=1.0, resolution=0.01, orient=tk.HORIZONTAL, length=250)
+scale_vol = tk.Scale(master, from_=0.0, to=1.0, resolution=0.01,
+                     orient=tk.HORIZONTAL, length=250, troughcolor='#848884')
 scale_trem_speed = tk.Scale(master, from_=0.5, to=15, resolution=0.2,
                             orient=tk.HORIZONTAL, length=200)
 scale_trem_amount = tk.Scale(master, from_=0.0, to=1.0, resolution=0.01,
                              orient=tk.HORIZONTAL, length=200)
+scale_roll = tk.Scale(master, from_=0, to=4410, resolution=50, orient=tk.HORIZONTAL, length=200)
+scale_fade = tk.Scale(master, from_=0.0, to=0.5, resolution=0.01, orient=tk.HORIZONTAL, length=200)
 scale_vol.set(0.7)
 scale_trem_speed.set(6.0)
 scale_trem_amount.set(0.5)
@@ -284,7 +287,6 @@ wave_button = tk.Button(master, bg="#000000", fg="white",
                         text='Sine', width=10, command=choise_wave)
 stop_button = tk.Button(master, bg="#728C00", fg="white", text='Stop', width=7, command=stop_it)
 
-duration_labal.grid(column=0, row=0)
 freq_labal.grid(column=0, row=1)
 fm_labal.grid(column=0, row=2)
 fm2_labal.grid(column=0, row=3)
@@ -294,10 +296,10 @@ ramp_amount_label.grid(column=0, row=6)
 ramp3_size_label.grid(column=0, row=7)
 wave_label.grid(column=3, row=0)
 ring_label.grid(column=5, row=8)
+duration_labal.grid(column=0, row=11)
 
-vol_label.grid(column=0, row=9)
+vol_label.grid(column=0, row=0)
 
-scale_duration.grid(column=1, row=0)
 scale_freq.grid(column=1, row=1)
 scale_fm.grid(column=1, row=2)
 scale_fm2.grid(column=1, row=3)
@@ -305,8 +307,9 @@ scale_speed.grid(column=1, row=4)
 scale_lfo_amount.grid(column=1, row=5)
 scale_ramp_amount.grid(column=1, row=6)
 scale_ramp3_size.grid(column=1, row=7)
+scale_duration.grid(column=1, row=11, columnspan=4)
 
-scale_vol.grid(column=1, row=9)
+scale_vol.grid(column=1, row=0)
 
 play_button.grid(column=2, row=0)
 stop_button.grid(column=2, row=1)
@@ -320,8 +323,10 @@ trem_speed_label.grid(column=3, row=7)
 scale_trem_speed.grid(column=4, row=7)
 trem_amount_label.grid(column=3, row=8)
 scale_trem_amount.grid(column=4, row=8)
-roll_label.grid(column=3, row=10)
-scale_roll.grid(column=4, row=10)
+roll_label.grid(column=3, row=9)
+scale_roll.grid(column=4, row=9)
+fade_out_label.grid(column=3, row=10)
+scale_fade.grid(column=4, row=10)
 
 master.protocol("WM_DELETE_WINDOW", on_closing)
 master.mainloop()
