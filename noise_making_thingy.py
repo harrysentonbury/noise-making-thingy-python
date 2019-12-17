@@ -83,13 +83,9 @@ def play():
                 waveform = triangle(ramp_2_osc())
         if choose_2 is True:
             if choose is False:
-                # waveform = 2 / np.pi * np.arcsin(np.sin(x * freq + ramp_2 * np.sin(
-                #     fm * x + ramp_3_fm2())))
                 waveform = 2 / np.pi * np.arcsin(np.sin(x * freq + ramp_2 * 2 / np.pi * np.arcsin(
                                                  np.sin(x * fm + ramp_3_fm2()))))
             if choose is True:
-                # waveform = 2 / np.pi * np.arcsin(np.sin(x * freq + lfo * np.sin(
-                #     fm * x + ramp_3_fm2())))
                 waveform = 2 / np.pi * np.arcsin(np.sin(x * freq + lfo * 2 / np.pi * np.arcsin(
                                                  np.sin(x * fm + ramp_3_fm2()))))
 
@@ -192,8 +188,12 @@ def choise_3():
         noise_button.config(bg="#728C00", fg="white", text="Noise <")
 
 
-def stop_it():
+def stop_it():      # no no no no NO!
     sd.stop()
+
+# The following function catches errors due to sd running in its own thread
+# tho in this case using sd.wait() instead of time.sleep() then sd.stop()
+# it may not have been necessary.
 
 
 def on_closing():
@@ -333,6 +333,7 @@ roll_label.grid(column=3, row=9)
 scale_roll.grid(column=4, row=9)
 fade_out_label.grid(column=3, row=10)
 scale_fade.grid(column=4, row=10)
+# Its like a face.
 
 master.protocol("WM_DELETE_WINDOW", on_closing)
 master.mainloop()
