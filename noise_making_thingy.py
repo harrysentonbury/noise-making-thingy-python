@@ -2,6 +2,7 @@
 """ Python thingy, a bit like a synthesizer """
 
 import numpy as np
+from scipy.io.wavfile import write
 import sounddevice as sd
 import time
 import tkinter as tk
@@ -11,6 +12,23 @@ from tkinter import messagebox
 def play():
     play_button.config(text="Wait", state="disabled")    # disable play button
     play_button.update()
+    save_wav_button.config(text="Wait", state="disabled")    # disable play button
+    save_wav_button.update()
+
+    def save_it():
+        if len(file_name.get()) == 0:
+            stamp = "{}.wav".format(str(time.time())[:10])
+        else:
+            stamp = "{}.wav".format(file_name.get())
+
+        bool_save.set(next(g_save))
+
+        wot = tk.messagebox.askyesno("Save", "Save file as {}".format(stamp))
+        if wot is True:
+            write_waveform = np.int16(waveform_stereo * 32767)
+            write(stamp, sample_rate, write_waveform)
+        if wot is False:
+            return
 
     def tremelo():                              # more of a tremelator!
         trem_adder = 1.0 - trem_amount_value
@@ -113,16 +131,26 @@ def play():
     if choose_1 is True:
         waveform = waveform * tremelo()
 
-    waveform0 = waveform * attenuation * vol
-    waveform1 = np.roll(waveform0, roller)
+    waveform = waveform * attenuation * vol
+    waveform1 = np.roll(waveform, roller)
     waveform1[:roller] = 0
-    waveform0[- len(fade_ramp):] *= fade_ramp
+    waveform[- len(fade_ramp):] *= fade_ramp
     waveform1[- len(fade_ramp):] *= fade_ramp
-    waveform_stereo = np.vstack((waveform0, waveform1)).T
+    waveform_stereo = np.vstack((waveform, waveform1)).T
+
+    if bool_save.get() is True:
+        save_it()
+        save_wav_entry.delete(0, last='end')
+        save_wav_entry.config(state="disabled")
+        dot_wav_label.config(text="")
+        instruct_label.config(text="")
 
     sd.play(waveform_stereo, sample_rate)
     play_button.update()                    # Enable play again.
     play_button.config(text="Play", state="normal")
+    save_wav_button.update()                    # Enable save again.
+    save_wav_button.config(text="Save", state="normal")
+
 
 # generators for buttons.
 
@@ -188,12 +216,28 @@ def choise_3():
         noise_button.config(bg="#728C00", fg="white", text="Noise <")
 
 
+def choise_save():
+    bool_save.set(next(g_save))
+    if bool_save.get() is True:
+        save_wav_button.config(bg="#728C00", fg="white", text="Save On")
+        save_wav_entry.config(state="normal")
+        save_wav_entry.focus()
+        dot_wav_label.config(text=".wav")
+        instruct_label.config(
+            text="Enter a file name and click Play. File will be saved before playback.", font='Times 10')
+    if bool_save.get() is False:
+        save_wav_button.config(bg="#000000", fg="white", text="Save Off")
+        save_wav_entry.delete(0, last='end')
+        save_wav_entry.config(state="disabled")
+        dot_wav_label.config(text="")
+        instruct_label.config(text="")
+
+
 def stop_it():      # no no no no NO!
     sd.stop()
 
-# The following function catches errors due to sd running in its own thread
-# tho in this case using sd.wait() instead of time.sleep() then sd.stop()
-# it may not have been necessary.
+# The following function catches errors due to sd running in its own thread,
+# tho in this case it may not have been necessary.
 
 
 def on_closing():
@@ -209,6 +253,7 @@ g1 = gen_1()
 g2 = gen_1()
 g3 = gen_3()
 g_wave = gen_1()
+g_save = gen_1()
 
 master = tk.Tk()
 master.geometry("900x600")
@@ -224,7 +269,9 @@ int_choice_3 = tk.IntVar()
 int_choice_3.set(0)
 bool_choice_wave = tk.BooleanVar()
 bool_choice_wave.set(False)
-
+bool_save = tk.BooleanVar()
+bool_save.set(False)
+file_name = tk.StringVar()
 
 duration_labal = tk.Label(master, text='Duration')
 freq_labal = tk.Label(master, text='Frequency Hz')
@@ -237,12 +284,15 @@ ramp3_size_label = tk.Label(master, text='FM 2 Ramp Time Ratio')
 wave_label = tk.Label(master, text='Wave Shape')
 fade_out_label = tk.Label(master, text='Fade Out')
 
-noise_shape_label = tk.Label(master, text='Shape')
+noise_shape_label = tk.Label(master, text='Noise Shape')
 trem_speed_label = tk.Label(master, text='Trem Speed')
 vol_label = tk.Label(master, text='Volume')
 trem_amount_label = tk.Label(master, text='Amount Trem')
 ring_label = tk.Label(master, text='Ring')
 roll_label = tk.Label(master, text='Delay')
+
+dot_wav_label = tk.Label(master)
+instruct_label = tk.Label(master)
 
 scale_freq = tk.Scale(master, from_=50, to=510, resolution=5, orient=tk.HORIZONTAL, length=250)
 scale_fm = tk.Scale(master, from_=10, to=250, resolution=5, orient=tk.HORIZONTAL, length=250)
@@ -256,7 +306,7 @@ scale_ramp_amount = tk.Scale(master, from_=1.0, to=8, resolution=0.1,
 scale_ramp3_size = tk.Scale(master, from_=1.3, to=10, resolution=0.1,
                             orient=tk.HORIZONTAL, length=250)
 scale_duration = tk.Scale(master, from_=0.5, to=160, resolution=0.5,
-                          orient=tk.HORIZONTAL, length=700, troughcolor='#848884')
+                          orient=tk.HORIZONTAL, length=700, width=30, troughcolor='#848884')
 
 scale_duration.set(4.0)
 scale_freq.set(360)
@@ -290,6 +340,8 @@ noise_button = tk.Button(master, bg="#000000", fg="white", text='Noise', width=6
 wave_button = tk.Button(master, bg="#000000", fg="white",
                         text='Sine', width=10, command=choise_wave)
 stop_button = tk.Button(master, bg="#728C00", fg="white", text='Stop', width=7, command=stop_it)
+save_wav_button = tk.Button(master, bg="#000000", fg="white", text='Save', command=choise_save)
+save_wav_entry = tk.Entry(master, textvariable=file_name, state="disabled")
 
 freq_labal.grid(column=0, row=1)
 fm_labal.grid(column=0, row=2)
@@ -299,7 +351,6 @@ lfo_amount_label.grid(column=0, row=5)
 ramp_amount_label.grid(column=0, row=6)
 ramp3_size_label.grid(column=0, row=7)
 wave_label.grid(column=3, row=0)
-duration_labal.grid(column=0, row=11)
 
 vol_label.grid(column=0, row=0)
 
@@ -333,6 +384,13 @@ roll_label.grid(column=3, row=9)
 scale_roll.grid(column=4, row=9)
 fade_out_label.grid(column=3, row=10)
 scale_fade.grid(column=4, row=10)
+
+duration_labal.grid(column=0, row=11)
+save_wav_button.grid(column=0, row=12)
+save_wav_entry.grid(column=1, row=12, sticky='e')
+dot_wav_label.grid(column=2, row=12, sticky='w')
+instruct_label.grid(column=1, row=13, columnspan=3)
+
 # Its like a face.
 
 master.protocol("WM_DELETE_WINDOW", on_closing)
