@@ -142,7 +142,7 @@ def play():
         save_it()
         save_wav_entry.delete(0, last='end')
         save_wav_entry.config(state="disabled")
-        dot_wav_label.config(text="")
+        dot_wav_label.config(text="", bg='#dddddd')
         instruct_label.config(text="")
 
     sd.play(waveform_stereo, sample_rate)
@@ -220,16 +220,16 @@ def choise_save():
     bool_save.set(next(g_save))
     if bool_save.get() is True:
         save_wav_button.config(bg="#728C00", fg="white", text="Save On")
-        save_wav_entry.config(state="normal")
+        save_wav_entry.config(state="normal", bg="#afeeae")
         save_wav_entry.focus()
-        dot_wav_label.config(text=".wav")
+        dot_wav_label.config(text=".wav", bg="#afeeae", relief=tk.RIDGE)
         instruct_label.config(
             text="Enter a file name and click Play. File will be saved before playback.", font='Times 10')
     if bool_save.get() is False:
         save_wav_button.config(bg="#000000", fg="white", text="Save Off")
         save_wav_entry.delete(0, last='end')
         save_wav_entry.config(state="disabled")
-        dot_wav_label.config(text="")
+        dot_wav_label.config(text="", bg='#dddddd')
         instruct_label.config(text="")
 
 
