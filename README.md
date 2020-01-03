@@ -8,7 +8,8 @@ Another modulator can be added by clicking the 'FM 2' button. Infact click it st
 Could not decide on tremelo or ring modulator so its sort of a highbred...for now, below the 0.5 slider trem amount setting its a tremelo, and above 0.5 its a ring modulator.
 Theres other sliders for sliding too.
 There is also a crappy white noise button. Don't bother clicking that one.
+Now you can save the beautiful sounds you make as a .wav file in the project folder.
 
 python3
 
-dependances = numpy, sounddevice, tkinter.
+dependances = numpy,scipy, sounddevice, tkinter.
