@@ -5,30 +5,15 @@ import numpy as np
 from scipy.io.wavfile import write
 import sounddevice as sd
 import time
+import pickle
 import tkinter as tk
 from tkinter import messagebox
 
 
-def play():
+def play(save=False):
+    """Gets values and selections from gui then plays or saves"""
     play_button.config(text="Wait", state="disabled")    # disable play button
     play_button.update()
-    save_wav_button.config(text="Wait", state="disabled")    # disable play button
-    save_wav_button.update()
-
-    def save_it():
-        if len(file_name.get()) == 0:
-            stamp = "{}.wav".format(str(time.time())[:10])
-        else:
-            stamp = "{}.wav".format(file_name.get())
-
-        bool_save.set(next(g_save))
-
-        wot = tk.messagebox.askyesno("Save", "Save file as {}".format(stamp))
-        if wot is True:
-            write_waveform = np.int16(waveform_stereo * 32767)
-            write(stamp, sample_rate, write_waveform)
-        if wot is False:
-            return
 
     def tremelo():                              # more of a tremelator!
         trem_adder = 1.0 - trem_amount_value
@@ -138,18 +123,26 @@ def play():
     waveform1[- len(fade_ramp):] *= fade_ramp
     waveform_stereo = np.vstack((waveform, waveform1)).T
 
-    if bool_save.get() is True:
-        save_it()
-        save_wav_entry.delete(0, last='end')
-        save_wav_entry.config(state="disabled")
-        dot_wav_label.config(text="", bg='#dddddd')
-        instruct_label.config(text="")
+    if save is True:
+        stamp = file_name.get()
+        if len(stamp) == 0:
+            stamp = "{}.wav".format(str(time.time())[:10])
+        else:
+            stamp = "{}.wav".format(stamp)
 
-    sd.play(waveform_stereo, sample_rate)
-    play_button.update()                    # Enable play again.
-    play_button.config(text="Play", state="normal")
-    save_wav_button.update()                    # Enable save again.
-    save_wav_button.config(text="Save", state="normal")
+            write_waveform = np.int16(waveform * 32767)
+            write(stamp, sample_rate, write_waveform)
+
+        file_name.set("")
+        play_button.update()
+        play_button.config(text="Play", state="normal")
+
+        saver_window.destroy()
+        messagebox.showinfo("File Saved", "File saved as {}".format(stamp))
+    else:
+        sd.play(waveform_stereo, sample_rate)
+        play_button.update()                    # Enable play again.
+        play_button.config(text="Play", state="normal")
 
 
 # generators for buttons.
@@ -217,24 +210,157 @@ def choise_3():
 
 
 def choise_save():
-    bool_save.set(next(g_save))
-    if bool_save.get() is True:
-        save_wav_button.config(bg="#728C00", fg="white", text="Save On")
-        save_wav_entry.config(state="normal", bg="#afeeae")
-        save_wav_entry.focus()
-        dot_wav_label.config(text=".wav", bg="#afeeae", relief=tk.RIDGE)
-        instruct_label.config(
-            text="Enter a file name and click Play. File will be saved before playback.", font='Times 10')
-    if bool_save.get() is False:
-        save_wav_button.config(bg="#000000", fg="white", text="Save Off")
-        save_wav_entry.delete(0, last='end')
-        save_wav_entry.config(state="disabled")
-        dot_wav_label.config(text="", bg='#dddddd')
-        instruct_label.config(text="")
+    play(save=True)  # flagged to write wav file
 
 
 def stop_it():      # no no no no NO!
     sd.stop()
+
+
+def saver_window_func():
+    """dialog box for saving as .wav"""
+
+    def on_cancel():
+        saver_window.destroy()
+
+    global saver_window
+    saver_window = tk.Toplevel(master)
+    saver_window.title('Save As .wav File')
+    saver_window.geometry('500x200')
+
+    instruct_label = tk.Label(
+        saver_window, text="Enter a file name and click Save", font='Times 15')
+    save_button = tk.Button(saver_window, bg="#000000", fg="white",
+                            text='Save', command=choise_save)
+    cancel_button = tk.Button(saver_window, text='Cancel', command=on_cancel)
+    save_entry = tk.Entry(saver_window, textvariable=file_name)
+    save_entry.focus()
+    dot_wav_label = tk.Label(saver_window, text='.wav', bg='white', relief=tk.SUNKEN)
+
+    instruct_label.grid(column=0, row=0, columnspan=2, padx=20, pady=10)
+    save_entry.grid(column=0, row=1, sticky='e')
+    dot_wav_label.grid(column=1, row=1, sticky='w', padx=2)
+    save_button.grid(column=1, row=2, pady=20)
+    cancel_button.grid(column=2, row=2, pady=20, padx=20)
+
+    saver_window.lift()
+
+
+def pickler_window_func():
+    """Dialog box for Save/Set Sliders"""
+    def on_cancel():
+        pickler_window.destroy()
+
+    def save_stuff():
+        """Puts slider values in a python list then pickles"""
+        s0 = scale_vol.get()
+        s1 = scale_trem_speed.get()
+        s2 = scale_trem_amount.get()
+        s3 = scale_duration.get()
+        s4 = scale_freq.get()
+        s5 = scale_fm.get()
+        s6 = scale_fm2.get()
+        s7 = scale_speed.get()
+        s8 = scale_lfo_amount.get()
+        s9 = scale_ramp_amount.get()
+        s10 = scale_ramp3_size.get()
+        s11 = scale_noise_shape.get()
+        s12 = scale_roll.get()
+        s13 = scale_fade.get()
+
+        settings_list = [s0, s1, s2, s3, s4, s5, s6, s7, s8, s9, s10, s11, s12, s13]
+        stamp = pickle_file_name.get()
+        if len(stamp) == 0:
+            print(str(time.time())[:10])
+            stamp = "{}.pickle".format(str(time.time())[:10])
+        else:
+            stamp = "{}.pickle".format(stamp)
+        with open(stamp, "wb+") as fp:
+            pickle.dump(settings_list, fp)
+        pickle_file_name.set("")
+        pickler_window.destroy()
+
+    def set_stuff():
+        """Unpickles list an reapplies to sliders"""
+        try:
+            with open(pickle_finder_name.get(), "rb") as fp:
+                go = pickle.load(fp)
+
+            scale_vol.set(go[0])
+            scale_trem_speed.set(go[1])
+            scale_trem_amount.set(go[2])
+            scale_duration.set(go[3])
+            scale_freq.set(go[4])
+            scale_fm.set(go[5])
+            scale_fm2.set(go[6])
+            scale_speed.set(go[7])
+            scale_lfo_amount.set(go[8])
+            scale_ramp_amount.set(go[9])
+            scale_ramp3_size.set(go[10])
+            scale_noise_shape.set(go[11])
+            scale_roll.set(go[12])
+            scale_fade.set(go[13])
+
+            pickler_window.destroy()
+        except FileNotFoundError:
+            # print('fuck')
+            if len(pickle_finder_name.get()) == 0:
+                messagebox.showinfo("File Name Not Entered",
+                                    "Type [<file name>.pickle]       in the box.")
+                settings_apply_entry.focus()
+            else:
+                messagebox.showinfo(
+                    "File Not Found", "{} not found or does not exist.".format(pickle_finder_name.get()))
+                pickle_finder_name.set("")
+                settings_apply_entry.delete(0, last='end')
+                settings_apply_entry.focus()
+
+    global pickler_window
+    pickler_window = tk.Toplevel(master)
+    pickler_window.geometry('500x200')
+    pickler_window.title('Save slider Settings')
+
+    instruct_label = tk.Label(pickler_window, text='Enter a file name then click save')
+    pickle_namer_entry = tk.Entry(pickler_window, textvariable=pickle_file_name)
+    dot_pickle_label = tk.Label(pickler_window, text='.pickle', bg='white', relief=tk.SUNKEN)
+    settings_apply_label = tk.Label(
+        pickler_window, text='Enter Settings File.txt, then click Apply')
+    settings_apply_entry = tk.Entry(pickler_window, textvariable=pickle_finder_name)
+    pickle_save_button = tk.Button(pickler_window, text='Save', command=save_stuff)
+    set_button = tk.Button(pickler_window, text='Apply', command=set_stuff)
+    cancel_button = tk.Button(pickler_window, text='Cancel', command=on_cancel)
+
+    instruct_label.grid(column=0, row=0, columnspan=2)
+    pickle_namer_entry.grid(column=0, row=1, sticky='e')
+    dot_pickle_label.grid(column=1, row=1, sticky='w')
+    pickle_save_button.grid(column=2, row=1)
+    settings_apply_label.grid(column=0, row=2, columnspan=2)
+    settings_apply_entry.grid(column=0, row=3, ipadx=26, columnspan=2)
+    set_button.grid(column=2, row=3)
+    cancel_button.grid(column=0, row=4)
+
+    pickler_window.lift()
+
+
+def saver():
+    if saver_window is None:   # don't forget to boolify it first!
+        saver_window_func()
+        return
+    try:
+        saver_window.lift()
+    except tk.TclError:       # error on reopening closed window
+        saver_window_func()
+
+
+def pickler():
+    if pickler_window is None:
+        pickler_window_func()
+        return
+    try:
+        pickler_window.lift()
+    except tk.TclError:
+        pickler_window_func()
+
 
 # The following function catches errors due to sd running in its own thread,
 # tho in this case it may not have been necessary.
@@ -247,13 +373,14 @@ def on_closing():
 
 sample_rate = 44100
 attenuation = 0.2
+saver_window = None
+pickler_window = None
 
 g = gen_1()
 g1 = gen_1()
 g2 = gen_1()
 g3 = gen_3()
 g_wave = gen_1()
-g_save = gen_1()
 
 master = tk.Tk()
 master.geometry("900x600")
@@ -269,9 +396,15 @@ int_choice_3 = tk.IntVar()
 int_choice_3.set(0)
 bool_choice_wave = tk.BooleanVar()
 bool_choice_wave.set(False)
-bool_save = tk.BooleanVar()
-bool_save.set(False)
+
 file_name = tk.StringVar()
+pickle_file_name = tk.StringVar()
+pickle_finder_name = tk.StringVar()
+
+menu_bar = tk.Menu(master)
+menu_bar.add_command(label='Save As .wav', command=saver)
+menu_bar.add_command(label='Save/Set Sliders', command=pickler)
+master.config(menu=menu_bar)
 
 duration_labal = tk.Label(master, text='Duration')
 freq_labal = tk.Label(master, text='Frequency Hz')
@@ -290,9 +423,6 @@ vol_label = tk.Label(master, text='Volume')
 trem_amount_label = tk.Label(master, text='Amount Trem')
 ring_label = tk.Label(master, text='Ring')
 roll_label = tk.Label(master, text='Delay')
-
-dot_wav_label = tk.Label(master)
-instruct_label = tk.Label(master)
 
 scale_freq = tk.Scale(master, from_=50, to=510, resolution=5, orient=tk.HORIZONTAL, length=250)
 scale_fm = tk.Scale(master, from_=10, to=250, resolution=5, orient=tk.HORIZONTAL, length=250)
@@ -340,8 +470,6 @@ noise_button = tk.Button(master, bg="#000000", fg="white", text='Noise', width=6
 wave_button = tk.Button(master, bg="#000000", fg="white",
                         text='Sine', width=10, command=choise_wave)
 stop_button = tk.Button(master, bg="#728C00", fg="white", text='Stop', width=7, command=stop_it)
-save_wav_button = tk.Button(master, bg="#000000", fg="white", text='Save', command=choise_save)
-save_wav_entry = tk.Entry(master, textvariable=file_name, state="disabled")
 
 freq_labal.grid(column=0, row=1)
 fm_labal.grid(column=0, row=2)
@@ -386,10 +514,6 @@ fade_out_label.grid(column=3, row=10)
 scale_fade.grid(column=4, row=10)
 
 duration_labal.grid(column=0, row=11)
-save_wav_button.grid(column=0, row=12)
-save_wav_entry.grid(column=1, row=12, sticky='e')
-dot_wav_label.grid(column=2, row=12, sticky='w')
-instruct_label.grid(column=1, row=13, columnspan=3)
 
 # Its like a face.
 
