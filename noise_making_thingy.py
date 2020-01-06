@@ -221,6 +221,8 @@ def saver_window_func():
     """dialog box for saving as .wav"""
 
     def on_cancel():
+        save_entry.delete(0, last='end')
+        file_name.set("")
         saver_window.destroy()
 
     global saver_window
@@ -243,13 +245,31 @@ def saver_window_func():
     save_button.grid(column=1, row=2, pady=20)
     cancel_button.grid(column=2, row=2, pady=20, padx=20)
 
+    saver_window.protocol("WM_DELETE_WINDOW", on_cancel)
     saver_window.lift()
 
 
 def pickler_window_func():
     """Dialog box for Save/Set Sliders"""
-    def on_cancel():
+    def on_closing_pickler():
+        pickle_namer_entry.delete(0, last='end')
+        settings_apply_entry.delete(0, last='end')
         pickler_window.destroy()
+
+    def look():
+        pickler_window.withdraw()
+        file_dialoge_item = filedialog.askopenfilename(
+            initialdir="./", title="Select file", filetypes=(
+                ("pickle files", "*.pickle"), ("all files", "*.*")))
+
+        if len(file_dialoge_item) == 0:
+            pickler_window.deiconify()
+            print('if len(file_dialoge_item) == 0')
+            return
+        else:
+            settings_apply_entry.delete(0, last='end')
+            settings_apply_entry.insert(0, os.path.split(file_dialoge_item)[1])
+            pickler_window.deiconify()
 
     def save_stuff():
         """Puts slider values in a python list then pickles"""
@@ -283,7 +303,7 @@ def pickler_window_func():
     def set_stuff():
         """Unpickles list an reapplies to sliders"""
         try:
-            with open(pickle_finder_name.get(), "rb") as fp:
+            with open(settings_apply_entry.get(), "rb") as fp:
                 go = pickle.load(fp)
 
             scale_vol.set(go[0])
@@ -304,14 +324,14 @@ def pickler_window_func():
             pickler_window.destroy()
         except FileNotFoundError:
             # print('fuck')
-            if len(pickle_finder_name.get()) == 0:
+            if len(settings_apply_entry.get()) == 0:
                 messagebox.showinfo("File Name Not Entered",
                                     "Type [<file name>.pickle]       in the box.")
                 settings_apply_entry.focus()
             else:
                 messagebox.showinfo(
-                    "File Not Found", "{} not found or does not exist.".format(pickle_finder_name.get()))
-                pickle_finder_name.set("")
+                    "File Not Found", "{} not found or does not exist.".format(
+                        settings_apply_entry.get()))
                 settings_apply_entry.delete(0, last='end')
                 settings_apply_entry.focus()
 
@@ -325,10 +345,10 @@ def pickler_window_func():
     dot_pickle_label = tk.Label(pickler_window, text='.pickle', bg='white', relief=tk.SUNKEN)
     settings_apply_label = tk.Label(
         pickler_window, text='Enter Settings File.txt, then click Apply')
-    settings_apply_entry = tk.Entry(pickler_window, textvariable=pickle_finder_name)
+    settings_apply_entry = tk.Entry(pickler_window)
     pickle_save_button = tk.Button(pickler_window, text='Save', command=save_stuff)
     set_button = tk.Button(pickler_window, text='Apply', command=set_stuff)
-    cancel_button = tk.Button(pickler_window, text='Cancel', command=on_cancel)
+    cancel_button = tk.Button(pickler_window, text='Cancel', command=on_closing_pickler)
 
     instruct_label.grid(column=0, row=0, columnspan=2)
     pickle_namer_entry.grid(column=0, row=1, sticky='e')
@@ -339,6 +359,7 @@ def pickler_window_func():
     set_button.grid(column=2, row=3)
     cancel_button.grid(column=0, row=4)
 
+    pickler_window.protocol("WM_DELETE_WINDOW", on_closing_pickler)
     pickler_window.lift()
 
 
@@ -399,7 +420,6 @@ bool_choice_wave.set(False)
 
 file_name = tk.StringVar()
 pickle_file_name = tk.StringVar()
-pickle_finder_name = tk.StringVar()
 
 menu_bar = tk.Menu(master)
 menu_bar.add_command(label='Save As .wav', command=saver)
