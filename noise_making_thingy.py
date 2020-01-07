@@ -6,8 +6,10 @@ from scipy.io.wavfile import write
 import sounddevice as sd
 import time
 import pickle
+import os
 import tkinter as tk
 from tkinter import messagebox
+from tkinter import filedialog
 
 
 def play(save=False):
@@ -55,6 +57,7 @@ def play(save=False):
     roller = int(scale_roll.get())
     fade_size = 5000 + int(duration * sample_rate * float(scale_fade.get()))
     noise_shape = float(scale_noise_shape.get())
+    device_arg = device_num.get()
 
     x = np.linspace(0, duration * 2 * np.pi, duration * sample_rate)    # f(x)
 
@@ -65,7 +68,6 @@ def play(save=False):
     choose_3 = int_choice_3.get()
     choose_wave = bool_choice_wave.get()
 
-    # ramp3_size =
     ramp_3 = np.ones(len(x))
     ramp_3_ramp = np.logspace(1, 0, int(duration * sample_rate // ramp3_divizor))
 
@@ -90,7 +92,7 @@ def play(save=False):
                                                  np.sin(x * fm + ramp_3_fm2()))))
             if choose is True:
                 waveform = 2 / np.pi * np.arcsin(np.sin(x * freq + lfo * 2 / np.pi * np.arcsin(
-                                                 np.sin(x * fm + ramp_3_fm2()))))
+                                                 np.sin(x * fm + ramp_3_fm2()))))  # bollox
 
     if choose_wave is False:
         if choose_2 is False:
@@ -130,17 +132,33 @@ def play(save=False):
         else:
             stamp = "{}.wav".format(stamp)
 
-            write_waveform = np.int16(waveform * 32767)
-            write(stamp, sample_rate, write_waveform)
+        # write_waveform = np.int16(waveform_stereo * 32767)
+        # write(stamp, sample_rate, write_waveform)
+        print('writing {}'.format(stamp))
 
         file_name.set("")
         play_button.update()
         play_button.config(text="Play", state="normal")
 
         saver_window.destroy()
-        messagebox.showinfo("File Saved", "File saved as {}".format(stamp))
+        if ms_win is not None:
+            ms_win.destroy()
+        message_win("File Saved", "File saved as {}".format(stamp))
     else:
-        sd.play(waveform_stereo, sample_rate)
+        try:
+            print(device_arg)
+            if device_arg < 0:
+                sd.play(waveform_stereo, sample_rate)
+            else:
+                sd.play(waveform_stereo, sample_rate, device=device_arg)
+        except sd.PortAudioError:
+            if ms_win is not None:
+                ms_win.destroy()
+            message_win(
+                "PortAudioError", """Driver id not valid! Type id number from the list.
+                 Or Click Reset to Default Driver""")
+            device_l()
+
         play_button.update()                    # Enable play again.
         play_button.config(text="Play", state="normal")
 
@@ -213,8 +231,97 @@ def choise_save():
     play(save=True)  # flagged to write wav file
 
 
-def stop_it():      # no no no no NO!
+def stop_it():
     sd.stop()
+
+
+def message_win_func(mtitle, blah):
+
+    def closer():
+        ms_win.destroy()
+
+    global ms_win
+    ms_win = tk.Toplevel(master)
+    ms_win.title(mtitle)
+    label = tk.Label(ms_win, text=blah, font='Times 20')
+    button = tk.Button(ms_win, text='OK', width=6, bg="#728C00", fg="white", command=closer)
+
+    label.pack(padx=30, pady=10)
+    button.pack(pady=20)
+    ms_win.lift()
+
+
+def message_win(mtitle, blah):
+    if ms_win is None:
+        message_win_func(mtitle, blah)
+        return
+    try:
+        ms_win.lift()
+    except tk.TclError:
+        message_win_func(mtitle, blah)
+
+
+def device_window_func():
+    """Dialog for viewing and selecting output drivers"""
+    global device_window
+    device_window = tk.Toplevel(master)
+    device_window.title('Device Selection')
+    device_window.config(bg='#afb4b5')
+
+    def reset_d():
+        device_entry.delete(0, last='end')
+        device_num.set(-1)
+
+    def driver_setter():
+        try:
+            num = int(device_entry.get())
+            device_num.set(num)
+            print(device_num.get())
+        except ValueError:
+            device_num.set(-1)
+            device_entry.delete(0, last="end")
+            if ms_win is not None:
+                ms_win.destroy()
+            message_win(mtitle="ValueError",
+                        blah="Must be integer number from list of available devices")
+
+    a = repr(sd.query_devices())
+    b = a.split("\n")
+
+    dframe = tk.Frame(device_window, relief=tk.RAISED, bd=2, bg='#afb4b5')
+    label_0 = tk.Label(device_window, text='List of availible devices',
+                       bg='#afb4b5', font='Times 20')
+    scrollbar = tk.Scrollbar(device_window)
+    label_2 = tk.Label(dframe, text='Enter device number', bg='#afb4b5', font='Times 15')
+    set_device_button = tk.Button(dframe, text='Select', height=3, command=driver_setter)
+    reset_button = tk.Button(device_window, text='Reset to Default Driver', command=reset_d)
+    device_entry = tk.Entry(dframe, width=10)
+    device_entry.focus_set()
+    list_bx = tk.Listbox(device_window, yscrollcommand=scrollbar.set, width=60, height=25)
+    for i in range(len(b)):
+        list_bx.insert(tk.END, b[i])
+
+    label_0.grid(row=0, column=0, columnspan=2)
+    list_bx.grid(row=1, column=0, columnspan=2)
+    scrollbar.grid(row=1, column=2, sticky=tk.N+tk.S)
+    label_2.grid(row=2, column=0, sticky='ne', pady=8, padx=5)
+    dframe.grid(row=2, column=0, rowspan=2, columnspan=2, sticky='w', pady=5, padx=20)
+    set_device_button.grid(row=3, column=1, sticky='w', pady=5, padx=5)
+    device_entry.grid(row=2, column=1, sticky='w', pady=8, padx=5)
+    reset_button.grid(row=4, column=1, sticky='w', pady=8)
+    scrollbar.config(command=list_bx.yview)
+
+    device_window.lift()
+
+
+def device_l():
+    if device_window is None:
+        device_window_func()
+        return
+    try:
+        device_window.lift()
+    except tk.TclError:
+        device_window_func()
 
 
 def saver_window_func():
@@ -245,8 +352,18 @@ def saver_window_func():
     save_button.grid(column=1, row=2, pady=20)
     cancel_button.grid(column=2, row=2, pady=20, padx=20)
 
-    saver_window.protocol("WM_DELETE_WINDOW", on_cancel)
+    #saver_window.protocol("WM_DELETE_WINDOW", on_cancel)
     saver_window.lift()
+
+
+def saver():
+    if saver_window is None:   # don't forget to boolify it first!
+        saver_window_func()
+        return
+    try:
+        saver_window.lift()
+    except tk.TclError:       # error on reopening closed window
+        saver_window_func()
 
 
 def pickler_window_func():
@@ -291,7 +408,6 @@ def pickler_window_func():
         settings_list = [s0, s1, s2, s3, s4, s5, s6, s7, s8, s9, s10, s11, s12, s13]
         stamp = pickle_file_name.get()
         if len(stamp) == 0:
-            print(str(time.time())[:10])
             stamp = "{}.pickle".format(str(time.time())[:10])
         else:
             stamp = "{}.pickle".format(stamp)
@@ -299,6 +415,9 @@ def pickler_window_func():
             pickle.dump(settings_list, fp)
         pickle_file_name.set("")
         pickler_window.destroy()
+        if ms_win is not None:
+            ms_win.destroy()
+        message_win("Settings Saved", "File saved as {}".format(stamp))
 
     def set_stuff():
         """Unpickles list an reapplies to sliders"""
@@ -306,6 +425,23 @@ def pickler_window_func():
             with open(settings_apply_entry.get(), "rb") as fp:
                 go = pickle.load(fp)
 
+        except FileNotFoundError:
+            # print('fuck')
+            if len(settings_apply_entry.get()) == 0:
+                if ms_win is not None:
+                    ms_win.destroy()
+                message_win("File Name Not Entered",
+                            "Type [<file name>.pickle]       in the box.")
+                settings_apply_entry.focus()
+            else:
+                if ms_win is not None:
+                    ms_win.destroy()
+                message_win(
+                    "File Not Found", "{} not found or does not exist.".format(
+                        settings_apply_entry.get()))
+                settings_apply_entry.delete(0, last='end')
+                settings_apply_entry.focus()
+        else:
             scale_vol.set(go[0])
             scale_trem_speed.set(go[1])
             scale_trem_amount.set(go[2])
@@ -322,18 +458,6 @@ def pickler_window_func():
             scale_fade.set(go[13])
 
             pickler_window.destroy()
-        except FileNotFoundError:
-            # print('fuck')
-            if len(settings_apply_entry.get()) == 0:
-                messagebox.showinfo("File Name Not Entered",
-                                    "Type [<file name>.pickle]       in the box.")
-                settings_apply_entry.focus()
-            else:
-                messagebox.showinfo(
-                    "File Not Found", "{} not found or does not exist.".format(
-                        settings_apply_entry.get()))
-                settings_apply_entry.delete(0, last='end')
-                settings_apply_entry.focus()
 
     global pickler_window
     pickler_window = tk.Toplevel(master)
@@ -349,6 +473,7 @@ def pickler_window_func():
     pickle_save_button = tk.Button(pickler_window, text='Save', command=save_stuff)
     set_button = tk.Button(pickler_window, text='Apply', command=set_stuff)
     cancel_button = tk.Button(pickler_window, text='Cancel', command=on_closing_pickler)
+    file_dialog_button = tk.Button(pickler_window, text='View Files', command=look)
 
     instruct_label.grid(column=0, row=0, columnspan=2)
     pickle_namer_entry.grid(column=0, row=1, sticky='e')
@@ -357,20 +482,11 @@ def pickler_window_func():
     settings_apply_label.grid(column=0, row=2, columnspan=2)
     settings_apply_entry.grid(column=0, row=3, ipadx=26, columnspan=2)
     set_button.grid(column=2, row=3)
-    cancel_button.grid(column=0, row=4)
+    cancel_button.grid(column=0, row=4, pady=10)
+    file_dialog_button.grid(column=2, row=4, pady=10)
 
     pickler_window.protocol("WM_DELETE_WINDOW", on_closing_pickler)
     pickler_window.lift()
-
-
-def saver():
-    if saver_window is None:   # don't forget to boolify it first!
-        saver_window_func()
-        return
-    try:
-        saver_window.lift()
-    except tk.TclError:       # error on reopening closed window
-        saver_window_func()
 
 
 def pickler():
@@ -383,10 +499,6 @@ def pickler():
         pickler_window_func()
 
 
-# The following function catches errors due to sd running in its own thread,
-# tho in this case it may not have been necessary.
-
-
 def on_closing():
     if messagebox.askokcancel("Quit", "Do you want to quit? "):
         master.destroy()
@@ -394,8 +506,10 @@ def on_closing():
 
 sample_rate = 44100
 attenuation = 0.2
+device_window = None
 saver_window = None
 pickler_window = None
+ms_win = None
 
 g = gen_1()
 g1 = gen_1()
@@ -418,12 +532,15 @@ int_choice_3.set(0)
 bool_choice_wave = tk.BooleanVar()
 bool_choice_wave.set(False)
 
+device_num = tk.IntVar()
+device_num.set(-1)
 file_name = tk.StringVar()
 pickle_file_name = tk.StringVar()
 
 menu_bar = tk.Menu(master)
 menu_bar.add_command(label='Save As .wav', command=saver)
 menu_bar.add_command(label='Save/Set Sliders', command=pickler)
+menu_bar.add_command(label='Output Devices', command=device_l)
 master.config(menu=menu_bar)
 
 duration_labal = tk.Label(master, text='Duration')
@@ -479,6 +596,7 @@ scale_vol.set(0.7)
 scale_trem_speed.set(6.0)
 scale_trem_amount.set(0.5)
 scale_noise_shape.set(-2.0)
+scale_roll.set(250)
 
 play_button = tk.Button(master, text='Play', bg='#0ba4a4', height=3, width=7, command=play)
 log_ramp_button = tk.Button(master, bg="#728C00", fg="white",
