@@ -146,7 +146,6 @@ def play(save=False):
         message_win("File Saved", "File saved as {}".format(stamp))
     else:
         try:
-            print(device_arg)
             if device_arg < 0:
                 sd.play(waveform_stereo, sample_rate)
             else:
@@ -154,10 +153,10 @@ def play(save=False):
         except sd.PortAudioError:
             if ms_win is not None:
                 ms_win.destroy()
+            device_l()
             message_win(
                 "PortAudioError", """Driver id not valid! Type id number from the list.
                  Or Click Reset to Default Driver""")
-            device_l()
 
         play_button.update()                    # Enable play again.
         play_button.config(text="Play", state="normal")
@@ -268,6 +267,9 @@ def device_window_func():
     device_window.title('Device Selection')
     device_window.config(bg='#afb4b5')
 
+    def close_devices():
+        device_window.destroy()
+
     def reset_d():
         device_entry.delete(0, last='end')
         device_num.set(-1)
@@ -276,7 +278,6 @@ def device_window_func():
         try:
             num = int(device_entry.get())
             device_num.set(num)
-            print(device_num.get())
         except ValueError:
             device_num.set(-1)
             device_entry.delete(0, last="end")
@@ -293,22 +294,25 @@ def device_window_func():
                        bg='#afb4b5', font='Times 20')
     scrollbar = tk.Scrollbar(device_window)
     label_2 = tk.Label(dframe, text='Enter device number', bg='#afb4b5', font='Times 15')
-    set_device_button = tk.Button(dframe, text='Select', height=3, command=driver_setter)
+    set_device_button = tk.Button(dframe, text='Select', height=3,
+                                  bg="#728C00", fg="white", command=driver_setter)
     reset_button = tk.Button(device_window, text='Reset to Default Driver', command=reset_d)
     device_entry = tk.Entry(dframe, width=10)
     device_entry.focus_set()
+    close_devices_button = tk.Button(device_window, text='Close', command=close_devices)
     list_bx = tk.Listbox(device_window, yscrollcommand=scrollbar.set, width=60, height=25)
     for i in range(len(b)):
         list_bx.insert(tk.END, b[i])
 
     label_0.grid(row=0, column=0, columnspan=2)
-    list_bx.grid(row=1, column=0, columnspan=2)
-    scrollbar.grid(row=1, column=2, sticky=tk.N+tk.S)
+    list_bx.grid(row=1, column=0, columnspan=3)
+    scrollbar.grid(row=1, column=3, sticky=tk.N+tk.S)
     label_2.grid(row=2, column=0, sticky='ne', pady=8, padx=5)
     dframe.grid(row=2, column=0, rowspan=2, columnspan=2, sticky='w', pady=5, padx=20)
     set_device_button.grid(row=3, column=1, sticky='w', pady=5, padx=5)
     device_entry.grid(row=2, column=1, sticky='w', pady=8, padx=5)
     reset_button.grid(row=4, column=1, sticky='w', pady=8)
+    close_devices_button.grid(row=3, column=2, sticky='w')
     scrollbar.config(command=list_bx.yview)
 
     device_window.lift()
@@ -339,7 +343,7 @@ def saver_window_func():
 
     instruct_label = tk.Label(
         saver_window, text="Enter a file name and click Save", font='Times 15')
-    save_button = tk.Button(saver_window, bg="#000000", fg="white",
+    save_button = tk.Button(saver_window, bg="#728C00", fg="white",
                             text='Save', command=choise_save)
     cancel_button = tk.Button(saver_window, text='Cancel', command=on_cancel)
     save_entry = tk.Entry(saver_window, textvariable=file_name)
@@ -370,23 +374,7 @@ def pickler_window_func():
     """Dialog box for Save/Set Sliders"""
     def on_closing_pickler():
         pickle_namer_entry.delete(0, last='end')
-        settings_apply_entry.delete(0, last='end')
         pickler_window.destroy()
-
-    def look():
-        pickler_window.withdraw()
-        file_dialoge_item = filedialog.askopenfilename(
-            initialdir="./", title="Select file", filetypes=(
-                ("pickle files", "*.pickle"), ("all files", "*.*")))
-
-        if len(file_dialoge_item) == 0:
-            pickler_window.deiconify()
-            print('if len(file_dialoge_item) == 0')
-            return
-        else:
-            settings_apply_entry.delete(0, last='end')
-            settings_apply_entry.insert(0, os.path.split(file_dialoge_item)[1])
-            pickler_window.deiconify()
 
     def save_stuff():
         """Puts slider values in a python list then pickles"""
@@ -419,71 +407,24 @@ def pickler_window_func():
             ms_win.destroy()
         message_win("Settings Saved", "File saved as {}".format(stamp))
 
-    def set_stuff():
-        """Unpickles list an reapplies to sliders"""
-        try:
-            with open(settings_apply_entry.get(), "rb") as fp:
-                go = pickle.load(fp)
-
-        except FileNotFoundError:
-            # print('fuck')
-            if len(settings_apply_entry.get()) == 0:
-                if ms_win is not None:
-                    ms_win.destroy()
-                message_win("File Name Not Entered",
-                            "Type [<file name>.pickle]       in the box.")
-                settings_apply_entry.focus()
-            else:
-                if ms_win is not None:
-                    ms_win.destroy()
-                message_win(
-                    "File Not Found", "{} not found or does not exist.".format(
-                        settings_apply_entry.get()))
-                settings_apply_entry.delete(0, last='end')
-                settings_apply_entry.focus()
-        else:
-            scale_vol.set(go[0])
-            scale_trem_speed.set(go[1])
-            scale_trem_amount.set(go[2])
-            scale_duration.set(go[3])
-            scale_freq.set(go[4])
-            scale_fm.set(go[5])
-            scale_fm2.set(go[6])
-            scale_speed.set(go[7])
-            scale_lfo_amount.set(go[8])
-            scale_ramp_amount.set(go[9])
-            scale_ramp3_size.set(go[10])
-            scale_noise_shape.set(go[11])
-            scale_roll.set(go[12])
-            scale_fade.set(go[13])
-
-            pickler_window.destroy()
-
     global pickler_window
     pickler_window = tk.Toplevel(master)
     pickler_window.geometry('500x200')
     pickler_window.title('Save slider Settings')
 
-    instruct_label = tk.Label(pickler_window, text='Enter a file name then click save')
+    instruct_label = tk.Label(
+        pickler_window, text='Enter a file name then click save', font='Times 20')
     pickle_namer_entry = tk.Entry(pickler_window, textvariable=pickle_file_name)
     dot_pickle_label = tk.Label(pickler_window, text='.pickle', bg='white', relief=tk.SUNKEN)
-    settings_apply_label = tk.Label(
-        pickler_window, text='Enter Settings File.txt, then click Apply')
-    settings_apply_entry = tk.Entry(pickler_window)
-    pickle_save_button = tk.Button(pickler_window, text='Save', command=save_stuff)
-    set_button = tk.Button(pickler_window, text='Apply', command=set_stuff)
+    pickle_save_button = tk.Button(pickler_window, text='Save',
+                                   bg="#728C00", fg="white", command=save_stuff)
     cancel_button = tk.Button(pickler_window, text='Cancel', command=on_closing_pickler)
-    file_dialog_button = tk.Button(pickler_window, text='View Files', command=look)
 
-    instruct_label.grid(column=0, row=0, columnspan=2)
-    pickle_namer_entry.grid(column=0, row=1, sticky='e')
+    instruct_label.grid(column=0, row=0, columnspan=3, padx=30, pady=10)
+    pickle_namer_entry.grid(column=0, row=1, sticky='e', ipadx=20)
     dot_pickle_label.grid(column=1, row=1, sticky='w')
-    pickle_save_button.grid(column=2, row=1)
-    settings_apply_label.grid(column=0, row=2, columnspan=2)
-    settings_apply_entry.grid(column=0, row=3, ipadx=26, columnspan=2)
-    set_button.grid(column=2, row=3)
+    pickle_save_button.grid(column=2, row=1, padx=10)
     cancel_button.grid(column=0, row=4, pady=10)
-    file_dialog_button.grid(column=2, row=4, pady=10)
 
     pickler_window.protocol("WM_DELETE_WINDOW", on_closing_pickler)
     pickler_window.lift()
@@ -499,8 +440,76 @@ def pickler():
         pickler_window_func()
 
 
+def set_stuff_func():
+
+    def cancel_set_window():
+        set_window.destroy()
+
+    def apply_settings():
+        """Get selected file, open and apply"""
+        if list_bx.curselection() is ():
+            message_win("No File Selected", "Click on a file to select then Apply")
+        else:
+            item = list_bx.get(list_bx.curselection())
+
+            try:
+                with open(item, "rb") as fp:
+                    go = pickle.load(fp)
+            except FileNotFoundError:
+                message_win("FileNotFoundError", "{} not found or does not exist".format(
+                            list_bx.curselection()))
+            except pickle.UnpicklingError:
+                message_win("UnpicklingError", "File corrupted or wrong")
+            else:
+                scale_vol.set(go[0])
+                scale_trem_speed.set(go[1])
+                scale_trem_amount.set(go[2])
+                scale_duration.set(go[3])
+                scale_freq.set(go[4])
+                scale_fm.set(go[5])
+                scale_fm2.set(go[6])
+                scale_speed.set(go[7])
+                scale_lfo_amount.set(go[8])
+                scale_ramp_amount.set(go[9])
+                scale_ramp3_size.set(go[10])
+                scale_noise_shape.set(go[11])
+                scale_roll.set(go[12])
+                scale_fade.set(go[13])
+
+    global set_window
+    set_window = tk.Toplevel(master)
+    scrollbar = tk.Scrollbar(set_window)
+    list_bx = tk.Listbox(set_window, yscrollcommand=scrollbar.set, width=60, height=20)
+    button_close = tk.Button(set_window, text='Close', command=cancel_set_window)
+    button_apply = tk.Button(set_window, text='Apply', bg="#728C00",
+                             fg="white", command=apply_settings)
+
+    list_bx.grid(column=0, row=0, columnspan=2)
+    button_apply.grid(column=0, row=1, pady=10)
+    button_close.grid(column=1, row=1, pady=10)
+    scrollbar.grid(column=2, row=0, sticky=tk.N+tk.S)
+    scrollbar.config(command=list_bx.yview)
+    d = os.getcwd()
+    for entry in os.scandir(d):
+        if not entry.name.startswith('.') and entry.name.endswith('.pickle') and entry.is_file():
+            list_bx.insert(tk.END, entry.name)
+
+    set_window.lift()
+
+
+def set_stuff():
+    if set_window is None:
+        set_stuff_func()
+        return
+    try:
+        set_window.lift()
+    except tk.TclError:
+        set_stuff_func()
+
+
 def on_closing():
     if messagebox.askokcancel("Quit", "Do you want to quit? "):
+        sd.stop()
         master.destroy()
 
 
@@ -509,6 +518,7 @@ attenuation = 0.2
 device_window = None
 saver_window = None
 pickler_window = None
+set_window = None
 ms_win = None
 
 g = gen_1()
@@ -539,7 +549,8 @@ pickle_file_name = tk.StringVar()
 
 menu_bar = tk.Menu(master)
 menu_bar.add_command(label='Save As .wav', command=saver)
-menu_bar.add_command(label='Save/Set Sliders', command=pickler)
+menu_bar.add_command(label='Save Sliders Settings', command=pickler)
+menu_bar.add_command(label='Recall Slider Settings', command=set_stuff)
 menu_bar.add_command(label='Output Devices', command=device_l)
 master.config(menu=menu_bar)
 
