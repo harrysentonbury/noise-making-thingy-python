@@ -9,7 +9,6 @@ import pickle
 import os
 import tkinter as tk
 from tkinter import messagebox
-from tkinter import filedialog
 
 
 def play(save=False):
@@ -59,7 +58,8 @@ def play(save=False):
     noise_shape = float(scale_noise_shape.get())
     device_arg = device_num.get()
 
-    x = np.linspace(0, duration * 2 * np.pi, duration * sample_rate)    # f(x)
+    total_samples = int(duration * sample_rate)
+    x = np.linspace(0, duration * 2 * np.pi, total_samples)    # f(x)
 
     # get tk variables from lines 145 -> 150
     choose = bool_choice.get()
@@ -71,9 +71,9 @@ def play(save=False):
     ramp_3 = np.ones(len(x))
     ramp_3_ramp = np.logspace(1, 0, int(duration * sample_rate // ramp3_divizor))
 
-    ramp_0 = np.logspace(noise_shape, 1, duration * sample_rate, base=5)
-    ramp_1 = np.logspace(1, noise_shape, duration * sample_rate, base=5)
-    ramp_2 = np.logspace(0, 1, duration * sample_rate) * ramp_amount
+    ramp_0 = np.logspace(noise_shape, 1, total_samples, base=5)
+    ramp_1 = np.logspace(1, noise_shape, total_samples, base=5)
+    ramp_2 = np.logspace(0, 1, total_samples) * ramp_amount
     ramp_3[: len(ramp_3_ramp)] = ramp_3_ramp
     fade_ramp = np.linspace(1, 0, fade_size if fade_size < 120000 else 120000)
 
@@ -132,9 +132,9 @@ def play(save=False):
         else:
             stamp = "{}.wav".format(stamp)
 
-        # write_waveform = np.int16(waveform_stereo * 32767)
-        # write(stamp, sample_rate, write_waveform)
-        print('writing {}'.format(stamp))
+        write_waveform = np.int16(waveform_stereo * 32767)
+        write(stamp, sample_rate, write_waveform)
+        # print('writing {}'.format(stamp))
 
         file_name.set("")
         play_button.update()
@@ -224,10 +224,6 @@ def choise_3():
         noise_button.config(bg="#000000", fg="white", text="Noise Off")
     if int_choice_3.get() is 2:
         noise_button.config(bg="#728C00", fg="white", text="Noise <")
-
-
-def choise_save():
-    play(save=True)  # flagged to write wav file
 
 
 def stop_it():
@@ -330,6 +326,9 @@ def device_l():
 
 def saver_window_func():
     """dialog box for saving as .wav"""
+
+    def choise_save():
+        play(save=True)  # flagged to write wav file
 
     def on_cancel():
         save_entry.delete(0, last='end')
