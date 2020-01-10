@@ -62,11 +62,11 @@ def play(save=False):
     x = np.linspace(0, duration * 2 * np.pi, total_samples)    # f(x)
 
     # get tk variables from lines 145 -> 150
-    choose = bool_choice.get()
-    choose_1 = bool_choice_1.get()
-    choose_2 = bool_choice_2.get()
+    choose = lfo_bool.get()
+    choose_1 = trem_bool.get()
+    choose_2 = fm_bool.get()
     choose_3 = int_choice_3.get()
-    choose_wave = bool_choice_wave.get()
+    choose_wave = wave_bool.get()
 
     ramp_3 = np.ones(len(x))
     ramp_3_ramp = np.logspace(1, 0, int(duration * sample_rate // ramp3_divizor))
@@ -185,34 +185,34 @@ def gen_3():
 
 
 def choise_wave():
-    bool_choice_wave.set(next(g_wave))
-    if bool_choice_wave.get() is True:
+    wave_bool.set(next(g_wave))
+    if wave_bool.get() is True:
         wave_button.config(bg="#728C00", fg="white", text="Triangle")
-    if bool_choice_wave.get() is False:
+    if wave_bool.get() is False:
         wave_button.config(bg="#000000", fg="white", text="Sine")
 
 
 def choise():
-    bool_choice.set(next(g))
-    if bool_choice.get() is False:
+    lfo_bool.set(next(g))
+    if lfo_bool.get() is False:
         log_ramp_button.config(bg="#728C00", fg="white", text="Log Ramp")
-    if bool_choice.get() is True:
+    if lfo_bool.get() is True:
         log_ramp_button.config(bg="#000000", fg="white", text="Sin LFO")
 
 
 def choise_1():
-    bool_choice_1.set(next(g1))
-    if bool_choice_1.get() is True:
+    trem_bool.set(next(g1))
+    if trem_bool.get() is True:
         tremelo_button.config(bg="#728C00", fg="white", text="Trem On")
-    if bool_choice_1.get() is False:
+    if trem_bool.get() is False:
         tremelo_button.config(bg="#000000", fg="white", text="Trem Off")
 
 
 def choise_2():
-    bool_choice_2.set(next(g2))
-    if bool_choice_2.get() is True:
+    fm_bool.set(next(g2))
+    if fm_bool.get() is True:
         fm2_button.config(bg="#728C00", fg="white", text="FM2 On")
-    if bool_choice_2.get() is False:
+    if fm_bool.get() is False:
         fm2_button.config(bg="#000000", fg="white", text="FM2 Off")
 
 
@@ -391,8 +391,14 @@ def pickler_window_func():
         s11 = scale_noise_shape.get()
         s12 = scale_roll.get()
         s13 = scale_fade.get()
+        s14 = lfo_bool.get()    # log ramp/lfo
+        s15 = trem_bool.get()    # tremelo
+        s16 = fm_bool.get()    # fm2
+        s17 = int_choice_3.get()  # noise
+        s18 = wave_bool.get()    # wave shape
 
-        settings_list = [s0, s1, s2, s3, s4, s5, s6, s7, s8, s9, s10, s11, s12, s13]
+        settings_list = [s0, s1, s2, s3, s4, s5, s6, s7, s8,
+                         s9, s10, s11, s12, s13, s14, s15, s16, s17, s18]
         stamp = pickle_file_name.get()
         if len(stamp) == 0:
             stamp = "{}.pickle".format(str(time.time())[:10])
@@ -409,7 +415,7 @@ def pickler_window_func():
     global pickler_window
     pickler_window = tk.Toplevel(master)
     pickler_window.geometry('500x200')
-    pickler_window.title('Save slider Settings')
+    pickler_window.title('Save Settings')
 
     instruct_label = tk.Label(
         pickler_window, text='Enter a file name then click save', font='Times 20')
@@ -474,9 +480,20 @@ def set_stuff_func():
                 scale_noise_shape.set(go[11])
                 scale_roll.set(go[12])
                 scale_fade.set(go[13])
+                if go[14] != lfo_bool.get():
+                    choise()
+                if go[15] != trem_bool.get():
+                    choise_1()
+                if go[16] != fm_bool.get():
+                    choise_2()
+                while int_choice_3.get() != go[17]:
+                    choise_3()
+                if go[18] != wave_bool.get():
+                    choise_wave()
 
     global set_window
     set_window = tk.Toplevel(master)
+    set_window.title('Recall settings')
     scrollbar = tk.Scrollbar(set_window)
     list_bx = tk.Listbox(set_window, yscrollcommand=scrollbar.set, width=60, height=20)
     button_close = tk.Button(set_window, text='Close', command=cancel_set_window)
@@ -527,19 +544,19 @@ g3 = gen_3()
 g_wave = gen_1()
 
 master = tk.Tk()
-master.geometry("900x600")
+master.geometry("930x600")
 master.title('Noise Making Thingy')
 
-bool_choice = tk.BooleanVar()
-bool_choice.set(False)
-bool_choice_1 = tk.BooleanVar()
-bool_choice_1.set(False)
-bool_choice_2 = tk.BooleanVar()
-bool_choice_2.set(False)
-int_choice_3 = tk.IntVar()
+lfo_bool = tk.BooleanVar()    # log/lfo
+lfo_bool.set(False)
+trem_bool = tk.BooleanVar()    # trem
+trem_bool.set(False)
+fm_bool = tk.BooleanVar()    # fm2
+fm_bool.set(False)
+int_choice_3 = tk.IntVar()    # noise
 int_choice_3.set(0)
-bool_choice_wave = tk.BooleanVar()
-bool_choice_wave.set(False)
+wave_bool = tk.BooleanVar()
+wave_bool.set(False)
 
 device_num = tk.IntVar()
 device_num.set(-1)
@@ -548,8 +565,8 @@ pickle_file_name = tk.StringVar()
 
 menu_bar = tk.Menu(master)
 menu_bar.add_command(label='Save As .wav', command=saver)
-menu_bar.add_command(label='Save Sliders Settings', command=pickler)
-menu_bar.add_command(label='Recall Slider Settings', command=set_stuff)
+menu_bar.add_command(label='Save Settings', command=pickler)
+menu_bar.add_command(label='Recall Settings', command=set_stuff)
 menu_bar.add_command(label='Output Devices', command=device_l)
 master.config(menu=menu_bar)
 
