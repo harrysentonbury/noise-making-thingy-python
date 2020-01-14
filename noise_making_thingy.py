@@ -61,11 +61,11 @@ def play(save=False):
     total_samples = int(duration * sample_rate)
     x = np.linspace(0, duration * 2 * np.pi, total_samples)    # f(x)
 
-    # get tk variables from lines 145 -> 150
+    # get tk variables.
     choose = lfo_bool.get()
-    choose_1 = trem_bool.get()
-    choose_2 = fm_bool.get()
-    choose_3 = int_choice_3.get()
+    choose_trem = trem_bool.get()
+    choose_fm2 = fm2_bool.get()
+    choose_noise = noise_int.get()
     choose_wave = wave_bool.get()
 
     ramp_3 = np.ones(len(x))
@@ -81,27 +81,27 @@ def play(save=False):
 
     # wave selector
     if choose_wave is True:
-        if choose_2 is False:
+        if choose_fm2 is False:
             if choose is True:
                 waveform = triangle(lfo_osc_wave())
             if choose is False:
                 waveform = triangle(ramp_2_osc())
-        if choose_2 is True:
+        if choose_fm2 is True:
             if choose is False:
                 waveform = 2 / np.pi * np.arcsin(np.sin(x * freq + ramp_2 * 2 / np.pi * np.arcsin(
                                                  np.sin(x * fm + ramp_3_fm2()))))
             if choose is True:
                 waveform = 2 / np.pi * np.arcsin(np.sin(x * freq + lfo * 2 / np.pi * np.arcsin(
-                                                 np.sin(x * fm + ramp_3_fm2()))))  # bollox
+                                                 np.sin(x * fm + ramp_3_fm2()))))   # bollox
 
     if choose_wave is False:
-        if choose_2 is False:
+        if choose_fm2 is False:
             if choose is True:
                 waveform = sine_wave(lfo_osc_wave())
             if choose is False:
                 waveform = sine_wave(ramp_2_osc())
 
-        if choose_2 is True:
+        if choose_fm2 is True:
             if choose is False:
                 waveform = np.sin(x * freq + ramp_2 * np.sin(
                     fm * x + ramp_3_fm2()))
@@ -109,13 +109,13 @@ def play(save=False):
                 waveform = np.sin(x * freq + lfo * np.sin(
                     fm * x + ramp_3_fm2()))
 
-    if choose_3 is 1:
+    if choose_noise is 1:
         waveform = waveform + noise(ramp_1)
 
-    if choose_3 is 2:
+    if choose_noise is 2:
         waveform = waveform + noise(ramp_0)
 
-    if choose_1 is True:
+    if choose_trem is True:
         waveform = waveform * tremelo()
 
     waveform = waveform * attenuation * vol
@@ -128,13 +128,13 @@ def play(save=False):
     if save is True:
         stamp = file_name.get()
         if len(stamp) == 0:
-            stamp = "{}.wav".format(str(time.time())[:10])
+            stamp = "NMT-{}.wav".format(str(time.ctime()[-16:].replace(" ", "-").replace(":", "-")))
         else:
             stamp = "{}.wav".format(stamp)
 
         write_waveform = np.int16(waveform_stereo * 32767)
         write(stamp, sample_rate, write_waveform)
-        # print('writing {}'.format(stamp))
+        #print('writing {}'.format(stamp))
 
         file_name.set("")
         play_button.update()
@@ -184,7 +184,7 @@ def gen_3():
 # Toggling wave selector bool and setting button colors
 
 
-def choise_wave():
+def toggle_wave():
     wave_bool.set(next(g_wave))
     if wave_bool.get() is True:
         wave_button.config(bg="#728C00", fg="white", text="Triangle")
@@ -192,15 +192,15 @@ def choise_wave():
         wave_button.config(bg="#000000", fg="white", text="Sine")
 
 
-def choise():
+def toggle_lfo():
     lfo_bool.set(next(g))
     if lfo_bool.get() is False:
-        log_ramp_button.config(bg="#728C00", fg="white", text="Log Ramp")
+        log_ramp_button.config(bg="#728C00", fg="white", text="FM1 Ramp")
     if lfo_bool.get() is True:
         log_ramp_button.config(bg="#000000", fg="white", text="Sin LFO")
 
 
-def choise_1():
+def toggle_trem():
     trem_bool.set(next(g1))
     if trem_bool.get() is True:
         tremelo_button.config(bg="#728C00", fg="white", text="Trem On")
@@ -208,25 +208,25 @@ def choise_1():
         tremelo_button.config(bg="#000000", fg="white", text="Trem Off")
 
 
-def choise_2():
-    fm_bool.set(next(g2))
-    if fm_bool.get() is True:
+def toggle_fm2():
+    fm2_bool.set(next(g2))
+    if fm2_bool.get() is True:
         fm2_button.config(bg="#728C00", fg="white", text="FM2 On")
-    if fm_bool.get() is False:
+    if fm2_bool.get() is False:
         fm2_button.config(bg="#000000", fg="white", text="FM2 Off")
 
 
-def choise_3():
-    int_choice_3.set(next(g3))
-    if int_choice_3.get() is 1:
+def select_noise():
+    noise_int.set(next(g3))
+    if noise_int.get() is 1:
         noise_button.config(bg="#728C00", fg="white", text="Noise >")
-    if int_choice_3.get() is 0:
+    if noise_int.get() is 0:
         noise_button.config(bg="#000000", fg="white", text="Noise Off")
-    if int_choice_3.get() is 2:
+    if noise_int.get() is 2:
         noise_button.config(bg="#728C00", fg="white", text="Noise <")
 
 
-def stop_it():
+def stop_it():    # stop button function.
     sd.stop()
 
 
@@ -282,7 +282,7 @@ def device_window_func():
             message_win(mtitle="ValueError",
                         blah="Must be integer number from list of available devices")
 
-    a = repr(sd.query_devices())
+    a = repr(sd.query_devices())    # list ov i/o devices
     b = a.split("\n")
 
     dframe = tk.Frame(device_window, relief=tk.RAISED, bd=2, bg='#afb4b5')
@@ -327,7 +327,7 @@ def device_l():
 def saver_window_func():
     """dialog box for saving as .wav"""
 
-    def choise_save():
+    def set_save_flag_func():
         play(save=True)  # flagged to write wav file
 
     def on_cancel():
@@ -343,7 +343,7 @@ def saver_window_func():
     instruct_label = tk.Label(
         saver_window, text="Enter a file name and click Save", font='Times 15')
     save_button = tk.Button(saver_window, bg="#728C00", fg="white",
-                            text='Save', command=choise_save)
+                            text='Save', command=set_save_flag_func)
     cancel_button = tk.Button(saver_window, text='Cancel', command=on_cancel)
     save_entry = tk.Entry(saver_window, textvariable=file_name)
     save_entry.focus()
@@ -376,7 +376,7 @@ def pickler_window_func():
         pickler_window.destroy()
 
     def save_stuff():
-        """Puts slider values in a python list then pickles"""
+        """Puts settings values in a python list then pickles"""
         s0 = scale_vol.get()
         s1 = scale_trem_speed.get()
         s2 = scale_trem_amount.get()
@@ -393,15 +393,16 @@ def pickler_window_func():
         s13 = scale_fade.get()
         s14 = lfo_bool.get()    # log ramp/lfo
         s15 = trem_bool.get()    # tremelo
-        s16 = fm_bool.get()    # fm2
-        s17 = int_choice_3.get()  # noise
+        s16 = fm2_bool.get()    # fm2
+        s17 = noise_int.get()  # noise
         s18 = wave_bool.get()    # wave shape
 
         settings_list = [s0, s1, s2, s3, s4, s5, s6, s7, s8,
                          s9, s10, s11, s12, s13, s14, s15, s16, s17, s18]
         stamp = pickle_file_name.get()
         if len(stamp) == 0:
-            stamp = "{}.pickle".format(str(time.time())[:10])
+            stamp = "NMT-{}.pickle".format(str(time.ctime()
+                                               [-16:].replace(" ", "-").replace(":", "-")))
         else:
             stamp = "{}.pickle".format(stamp)
         with open(stamp, "wb+") as fp:
@@ -451,7 +452,7 @@ def set_stuff_func():
         set_window.destroy()
 
     def apply_settings():
-        """Get selected file, open and apply"""
+        """Get selected settings file, open and apply"""
         if list_bx.curselection() is ():
             message_win("No File Selected", "Click on a file to select then Apply")
         else:
@@ -466,30 +467,35 @@ def set_stuff_func():
             except pickle.UnpicklingError:
                 message_win("UnpicklingError", "File corrupted or wrong")
             else:
-                scale_vol.set(go[0])
-                scale_trem_speed.set(go[1])
-                scale_trem_amount.set(go[2])
-                scale_duration.set(go[3])
-                scale_freq.set(go[4])
-                scale_fm.set(go[5])
-                scale_fm2.set(go[6])
-                scale_speed.set(go[7])
-                scale_lfo_amount.set(go[8])
-                scale_ramp_amount.set(go[9])
-                scale_ramp3_size.set(go[10])
-                scale_noise_shape.set(go[11])
-                scale_roll.set(go[12])
-                scale_fade.set(go[13])
-                if go[14] != lfo_bool.get():
-                    choise()
-                if go[15] != trem_bool.get():
-                    choise_1()
-                if go[16] != fm_bool.get():
-                    choise_2()
-                while int_choice_3.get() != go[17]:
-                    choise_3()
-                if go[18] != wave_bool.get():
-                    choise_wave()
+                try:
+                    scale_vol.set(go[0])
+                    scale_trem_speed.set(go[1])
+                    scale_trem_amount.set(go[2])
+                    scale_duration.set(go[3])
+                    scale_freq.set(go[4])
+                    scale_fm.set(go[5])
+                    scale_fm2.set(go[6])
+                    scale_speed.set(go[7])
+                    scale_lfo_amount.set(go[8])
+                    scale_ramp_amount.set(go[9])
+                    scale_ramp3_size.set(go[10])
+                    scale_noise_shape.set(go[11])
+                    scale_roll.set(go[12])
+                    scale_fade.set(go[13])
+                    if go[14] != lfo_bool.get():
+                        toggle_lfo()
+                    if go[15] != trem_bool.get():
+                        toggle_trem()
+                    if go[16] != fm2_bool.get():
+                        toggle_fm2()
+                    while noise_int.get() != go[17]:
+                        select_noise()
+                    if go[18] != wave_bool.get():
+                        toggle_wave()
+                except IndexError:
+                    message_win("IndexError", "File corrupted or wrong")
+                except tk.TclError:
+                    message_win("IndexError", "File corrupted or wrong")
 
     global set_window
     set_window = tk.Toplevel(master)
@@ -529,158 +535,167 @@ def on_closing():
         master.destroy()
 
 
-sample_rate = 44100
-attenuation = 0.2
-device_window = None
-saver_window = None
-pickler_window = None
-set_window = None
-ms_win = None
+try:
+    sample_rate = 44100
+    attenuation = 0.2
+    device_window = None
+    saver_window = None
+    pickler_window = None
+    set_window = None
+    ms_win = None
 
-g = gen_1()
-g1 = gen_1()
-g2 = gen_1()
-g3 = gen_3()
-g_wave = gen_1()
+    g = gen_1()
+    g1 = gen_1()
+    g2 = gen_1()
+    g3 = gen_3()
+    g_wave = gen_1()
 
-master = tk.Tk()
-master.geometry("930x600")
-master.title('Noise Making Thingy')
+    master = tk.Tk()
+    master.geometry("930x600")
+    master.title('Noise Making Thingy')
 
-lfo_bool = tk.BooleanVar()    # log/lfo
-lfo_bool.set(False)
-trem_bool = tk.BooleanVar()    # trem
-trem_bool.set(False)
-fm_bool = tk.BooleanVar()    # fm2
-fm_bool.set(False)
-int_choice_3 = tk.IntVar()    # noise
-int_choice_3.set(0)
-wave_bool = tk.BooleanVar()
-wave_bool.set(False)
+    lfo_bool = tk.BooleanVar()    # log/lfo
+    lfo_bool.set(False)
+    trem_bool = tk.BooleanVar()    # trem
+    trem_bool.set(False)
+    fm2_bool = tk.BooleanVar()    # fm2
+    fm2_bool.set(False)
+    noise_int = tk.IntVar()    # noise
+    noise_int.set(0)
+    wave_bool = tk.BooleanVar()
+    wave_bool.set(False)
 
-device_num = tk.IntVar()
-device_num.set(-1)
-file_name = tk.StringVar()
-pickle_file_name = tk.StringVar()
+    device_num = tk.IntVar()
+    device_num.set(-1)
+    file_name = tk.StringVar()
+    pickle_file_name = tk.StringVar()
 
-menu_bar = tk.Menu(master)
-menu_bar.add_command(label='Save As .wav', command=saver)
-menu_bar.add_command(label='Save Settings', command=pickler)
-menu_bar.add_command(label='Recall Settings', command=set_stuff)
-menu_bar.add_command(label='Output Devices', command=device_l)
-master.config(menu=menu_bar)
+    menu_bar = tk.Menu(master)
+    menu_bar.add_command(label='Save As .wav', command=saver)
+    menu_bar.add_command(label='Save Settings', command=pickler)
+    menu_bar.add_command(label='Recall Settings', command=set_stuff)
+    menu_bar.add_command(label='Output Devices', command=device_l)
+    master.config(menu=menu_bar)
 
-duration_labal = tk.Label(master, text='Duration')
-freq_labal = tk.Label(master, text='Frequency Hz')
-fm_labal = tk.Label(master, text='FM 1 Hz')
-fm2_labal = tk.Label(master, text='FM 2 Hz')
-speed_labal = tk.Label(master, text='Sin LFO Speed')
-lfo_amount_label = tk.Label(master, text='Sin LFO Amount')
-ramp_amount_label = tk.Label(master, text='FM 1 Ramp Amount')
-ramp3_size_label = tk.Label(master, text='FM 2 Ramp Time Ratio')
-wave_label = tk.Label(master, text='Wave Shape')
-fade_out_label = tk.Label(master, text='Fade Out')
+    duration_labal = tk.Label(master, text='Duration')
+    freq_labal = tk.Label(master, text='Frequency Hz')
+    fm_labal = tk.Label(master, text='FM 1 Hz')
+    fm2_labal = tk.Label(master, text='FM 2 Hz')
+    speed_labal = tk.Label(master, text='Sin LFO Speed')
+    lfo_amount_label = tk.Label(master, text='Sin LFO Amount')
+    ramp_amount_label = tk.Label(master, text='FM1 Ramp Amount')
+    ramp3_size_label = tk.Label(master, text='FM2 Ramp Time Ratio')
+    wave_label = tk.Label(master, text='Wave Shape')
+    fade_out_label = tk.Label(master, text='Fade Out')
 
-noise_shape_label = tk.Label(master, text='Noise Shape')
-trem_speed_label = tk.Label(master, text='Trem Speed')
-vol_label = tk.Label(master, text='Volume')
-trem_amount_label = tk.Label(master, text='Amount Trem')
-ring_label = tk.Label(master, text='Ring')
-roll_label = tk.Label(master, text='Delay')
+    noise_shape_label = tk.Label(master, text='Noise Shape')
+    trem_speed_label = tk.Label(master, text='Trem Speed')
+    vol_label = tk.Label(master, text='Volume')
+    trem_amount_label = tk.Label(master, text='Amount Trem')
+    ring_label = tk.Label(master, text='Ring')
+    roll_label = tk.Label(master, text='Delay')
+    roll_units_label = tk.Label(master, text='1/44100')
 
-scale_freq = tk.Scale(master, from_=50, to=510, resolution=5, orient=tk.HORIZONTAL, length=250)
-scale_fm = tk.Scale(master, from_=10, to=250, resolution=5, orient=tk.HORIZONTAL, length=250)
-scale_fm2 = tk.Scale(master, from_=40, to=400, resolution=5, orient=tk.HORIZONTAL, length=250)
-scale_speed = tk.Scale(master, from_=0.02, to=5, resolution=0.02,
-                       orient=tk.HORIZONTAL, length=250)
-scale_lfo_amount = tk.Scale(master, from_=1.0, to=5.0, resolution=0.1,
-                            orient=tk.HORIZONTAL, length=250)
-scale_ramp_amount = tk.Scale(master, from_=1.0, to=8, resolution=0.1,
-                             orient=tk.HORIZONTAL, length=250)
-scale_ramp3_size = tk.Scale(master, from_=1.3, to=10, resolution=0.1,
-                            orient=tk.HORIZONTAL, length=250)
-scale_duration = tk.Scale(master, from_=0.5, to=160, resolution=0.5,
-                          orient=tk.HORIZONTAL, length=700, width=30, troughcolor='#848884')
+    scale_freq = tk.Scale(master, from_=50, to=510, resolution=5, orient=tk.HORIZONTAL, length=250)
+    scale_fm = tk.Scale(master, from_=10, to=250, resolution=5, orient=tk.HORIZONTAL, length=250)
+    scale_fm2 = tk.Scale(master, from_=40, to=400, resolution=5, orient=tk.HORIZONTAL, length=250)
+    scale_speed = tk.Scale(master, from_=0.02, to=5, resolution=0.02,
+                           orient=tk.HORIZONTAL, length=250)
+    scale_lfo_amount = tk.Scale(master, from_=1.0, to=5.0, resolution=0.1,
+                                orient=tk.HORIZONTAL, length=250)
+    scale_ramp_amount = tk.Scale(master, from_=1.0, to=8, resolution=0.1,
+                                 orient=tk.HORIZONTAL, length=250)
+    scale_ramp3_size = tk.Scale(master, from_=1.3, to=10, resolution=0.1,
+                                orient=tk.HORIZONTAL, length=250)
+    scale_duration = tk.Scale(master, from_=0.5, to=160, resolution=0.5,
+                              orient=tk.HORIZONTAL, length=700, width=30, troughcolor='#848884')
 
-scale_duration.set(4.0)
-scale_freq.set(360)
-scale_fm.set(60)
-scale_fm2.set(300)
-scale_speed.set(1.0)
-scale_ramp3_size.set(2)
+    scale_duration.set(4.0)
+    scale_freq.set(360)
+    scale_fm.set(60)
+    scale_fm2.set(300)
+    scale_speed.set(1.0)
+    scale_ramp3_size.set(2)
 
-scale_vol = tk.Scale(master, from_=0.0, to=1.0, resolution=0.01,
-                     orient=tk.HORIZONTAL, length=250, troughcolor='#848884')
-scale_noise_shape = tk.Scale(master, from_=-10.0, to=0.0, resolution=0.1,
-                             orient=tk.HORIZONTAL, length=200)
-scale_trem_speed = tk.Scale(master, from_=0.5, to=15, resolution=0.2,
-                            orient=tk.HORIZONTAL, length=200)
-scale_trem_amount = tk.Scale(master, from_=0.0, to=1.0, resolution=0.01,
-                             orient=tk.HORIZONTAL, length=200)
-scale_roll = tk.Scale(master, from_=0, to=4410, resolution=50, orient=tk.HORIZONTAL, length=200)
-scale_fade = tk.Scale(master, from_=0.0, to=0.5, resolution=0.01, orient=tk.HORIZONTAL, length=200)
-scale_vol.set(0.7)
-scale_trem_speed.set(6.0)
-scale_trem_amount.set(0.5)
-scale_noise_shape.set(-2.0)
-scale_roll.set(250)
+    scale_vol = tk.Scale(master, from_=0.0, to=1.0, resolution=0.01,
+                         orient=tk.HORIZONTAL, length=250, troughcolor='#575857')
+    scale_noise_shape = tk.Scale(master, from_=-10.0, to=0.0, resolution=0.1,
+                                 orient=tk.HORIZONTAL, length=200)
+    scale_trem_speed = tk.Scale(master, from_=0.5, to=15, resolution=0.2,
+                                orient=tk.HORIZONTAL, length=200)
+    scale_trem_amount = tk.Scale(master, from_=0.0, to=1.0, resolution=0.01,
+                                 orient=tk.HORIZONTAL, length=200)
+    scale_roll = tk.Scale(master, from_=0, to=4410, resolution=50, orient=tk.HORIZONTAL, length=200)
+    scale_fade = tk.Scale(master, from_=0.0, to=0.5, resolution=0.01,
+                          orient=tk.HORIZONTAL, length=200)
+    scale_vol.set(0.7)
+    scale_trem_speed.set(6.0)
+    scale_trem_amount.set(0.5)
+    scale_noise_shape.set(-2.0)
+    scale_roll.set(250)
 
-play_button = tk.Button(master, text='Play', bg='#0ba4a4', height=3, width=7, command=play)
-log_ramp_button = tk.Button(master, bg="#728C00", fg="white",
-                            text="FM 1 Ramp", width=7, command=choise)
-tremelo_button = tk.Button(master, bg="#000000", fg="white",
-                           text='Trem Off', width=7, command=choise_1)
-fm2_button = tk.Button(master, bg="#000000", fg="white", text='FM2 Off', width=7, command=choise_2)
-noise_button = tk.Button(master, bg="#000000", fg="white", text='Noise', width=6, command=choise_3)
-wave_button = tk.Button(master, bg="#000000", fg="white",
-                        text='Sine', width=10, command=choise_wave)
-stop_button = tk.Button(master, bg="#728C00", fg="white", text='Stop', width=7, command=stop_it)
+    play_button = tk.Button(master, text='Play', bg='#0ba4a4', height=3, width=7, command=play)
+    log_ramp_button = tk.Button(master, bg="#728C00", fg="white",
+                                text="FM1 Ramp", width=7, command=toggle_lfo)
+    tremelo_button = tk.Button(master, bg="#000000", fg="white",
+                               text='Trem Off', width=7, command=toggle_trem)
+    fm2_button = tk.Button(master, bg="#000000", fg="white",
+                           text='FM2 Off', width=7, command=toggle_fm2)
+    noise_button = tk.Button(master, bg="#000000", fg="white",
+                             text='Noise', width=6, command=select_noise)
+    wave_button = tk.Button(master, bg="#000000", fg="white",
+                            text='Sine', width=10, command=toggle_wave)
+    stop_button = tk.Button(master, bg="#728C00", fg="white", text='Stop', width=7, command=stop_it)
 
-freq_labal.grid(column=0, row=1)
-fm_labal.grid(column=0, row=2)
-fm2_labal.grid(column=0, row=3)
-speed_labal.grid(column=0, row=4)
-lfo_amount_label.grid(column=0, row=5)
-ramp_amount_label.grid(column=0, row=6)
-ramp3_size_label.grid(column=0, row=7)
-wave_label.grid(column=3, row=0)
+    freq_labal.grid(column=0, row=1)
+    fm_labal.grid(column=0, row=2)
+    fm2_labal.grid(column=0, row=3)
+    speed_labal.grid(column=0, row=4)
+    lfo_amount_label.grid(column=0, row=5)
+    ramp_amount_label.grid(column=0, row=6)
+    ramp3_size_label.grid(column=0, row=7)
+    wave_label.grid(column=3, row=0)
 
-vol_label.grid(column=0, row=0)
+    vol_label.grid(column=0, row=0)
 
-scale_freq.grid(column=1, row=1)
-scale_fm.grid(column=1, row=2)
-scale_fm2.grid(column=1, row=3)
-scale_speed.grid(column=1, row=4)
-scale_lfo_amount.grid(column=1, row=5)
-scale_ramp_amount.grid(column=1, row=6)
-scale_ramp3_size.grid(column=1, row=7)
-scale_duration.grid(column=1, row=11, columnspan=4)
+    scale_freq.grid(column=1, row=1)
+    scale_fm.grid(column=1, row=2)
+    scale_fm2.grid(column=1, row=3)
+    scale_speed.grid(column=1, row=4)
+    scale_lfo_amount.grid(column=1, row=5)
+    scale_ramp_amount.grid(column=1, row=6)
+    scale_ramp3_size.grid(column=1, row=7)
+    scale_duration.grid(column=1, row=11, columnspan=4)
 
-scale_vol.grid(column=1, row=0)
+    scale_vol.grid(column=1, row=0)
 
-play_button.grid(column=2, row=0, padx=20)
-stop_button.grid(column=2, row=1)
-log_ramp_button.grid(column=2, row=6)
-tremelo_button.grid(column=2, row=2)
-fm2_button.grid(column=2, row=3)
-noise_button.grid(column=2, row=4)
-wave_button.grid(column=4, row=0)
+    play_button.grid(column=2, row=0, padx=20)
+    stop_button.grid(column=2, row=1)
+    log_ramp_button.grid(column=2, row=6)
+    tremelo_button.grid(column=2, row=2)
+    fm2_button.grid(column=2, row=3)
+    noise_button.grid(column=2, row=4)
+    wave_button.grid(column=4, row=0)
 
-noise_shape_label.grid(column=3, row=4)
-scale_noise_shape.grid(column=4, row=4)
-trem_speed_label.grid(column=3, row=2)
-scale_trem_speed.grid(column=4, row=2)
-trem_amount_label.grid(column=3, row=3)
-scale_trem_amount.grid(column=4, row=3)
-ring_label.grid(column=5, row=3)
-roll_label.grid(column=3, row=9)
-scale_roll.grid(column=4, row=9)
-fade_out_label.grid(column=3, row=10)
-scale_fade.grid(column=4, row=10)
+    noise_shape_label.grid(column=3, row=4)
+    scale_noise_shape.grid(column=4, row=4)
+    trem_speed_label.grid(column=3, row=2)
+    scale_trem_speed.grid(column=4, row=2)
+    trem_amount_label.grid(column=3, row=3)
+    scale_trem_amount.grid(column=4, row=3)
+    ring_label.grid(column=5, row=3)
+    roll_label.grid(column=3, row=9)
+    scale_roll.grid(column=4, row=9)
+    roll_units_label.grid(column=5, row=9)
+    fade_out_label.grid(column=3, row=10)
+    scale_fade.grid(column=4, row=10)
 
-duration_labal.grid(column=0, row=11)
+    duration_labal.grid(column=0, row=11)
 
-# Its like a face.
+    # Its like a face.
 
-master.protocol("WM_DELETE_WINDOW", on_closing)
-master.mainloop()
+    master.protocol("WM_DELETE_WINDOW", on_closing)
+    master.mainloop()
+
+except KeyboardInterrupt:
+    print(' Come back soon')
