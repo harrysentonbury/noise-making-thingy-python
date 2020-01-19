@@ -23,8 +23,8 @@ def play(save=False):
     def ramp_2_osc():
         return ramp_2 * np.sin(fm * x)
 
-    def lfo_osc_wave():
-        return lfo * np.sin(fm * x)
+    def lfo_osc_wave(lfo_shape):
+        return lfo_shape() * np.sin(fm * x)
 
     def ramp_3_fm2():
         return ramp_3 * np.sin(fm2 * x)
@@ -41,6 +41,14 @@ def play(save=False):
         y = np.random.normal(0, 0.4, len(x))
         y = np.clip(y, a_min=-1.0, a_max=1.0) * (ramp * 0.1)
         return y
+
+    def lfo():
+        return (np.sin(x * speed)) * lfo_amount
+
+    def lfo_pluss():
+        y = np.sin(x * speed) * 2 + 1
+        yy = np.clip(y, 0.0, 1) * lfo_amount
+        return yy
 
     freq = float(scale_freq.get())
     fm = float(scale_fm.get())
@@ -62,7 +70,7 @@ def play(save=False):
     x = np.linspace(0, duration * 2 * np.pi, total_samples)    # f(x)
 
     # get tk variables.
-    choose = lfo_bool.get()
+    choose = lfo_int.get()
     choose_trem = trem_bool.get()
     choose_fm2 = fm2_bool.get()
     choose_noise = noise_int.get()
@@ -77,36 +85,45 @@ def play(save=False):
     ramp_3[: len(ramp_3_ramp)] = ramp_3_ramp
     fade_ramp = np.linspace(1, 0, fade_size if fade_size < 120000 else 120000)
 
-    lfo = np.sin(x * speed) * lfo_amount
-
     # wave selector
     if choose_wave is True:
         if choose_fm2 is False:
-            if choose is True:
-                waveform = triangle(lfo_osc_wave())
-            if choose is False:
+            if choose is 0:
                 waveform = triangle(ramp_2_osc())
+            if choose is 1:
+                waveform = triangle(lfo_osc_wave())
+            if choose is 2:
+                waveform = triangle(lfo_osc_wave(lfo_pluss))
+
         if choose_fm2 is True:
-            if choose is False:
+            if choose is 0:
                 waveform = 2 / np.pi * np.arcsin(np.sin(x * freq + ramp_2 * 2 / np.pi * np.arcsin(
-                                                 np.sin(x * fm + ramp_3_fm2()))))
-            if choose is True:
-                waveform = 2 / np.pi * np.arcsin(np.sin(x * freq + lfo * 2 / np.pi * np.arcsin(
-                                                 np.sin(x * fm + ramp_3_fm2()))))   # bollox
+                    np.sin(x * fm + ramp_3_fm2()))))
+            if choose is 1:
+                waveform = 2 / np.pi * np.arcsin(np.sin(x * freq + lfo() * 2 / np.pi * np.arcsin(
+                    np.sin(x * fm + ramp_3_fm2()))))   # bollox
+            if choose is 2:
+                waveform = 2 / np.pi * np.arcsin(np.sin(x * freq + lfo_pluss() * 2 / np.pi * np.arcsin(
+                    np.sin(x * fm + ramp_3_fm2()))))   # bollox
 
     if choose_wave is False:
         if choose_fm2 is False:
-            if choose is True:
-                waveform = sine_wave(lfo_osc_wave())
-            if choose is False:
+            if choose is 0:
                 waveform = sine_wave(ramp_2_osc())
+            if choose is 1:
+                waveform = sine_wave(lfo_osc_wave(lfo))
+            if choose is 2:
+                waveform = sine_wave(lfo_osc_wave(lfo_pluss))
 
         if choose_fm2 is True:
-            if choose is False:
+            if choose is 0:
                 waveform = np.sin(x * freq + ramp_2 * np.sin(
                     fm * x + ramp_3_fm2()))
-            if choose is True:
-                waveform = np.sin(x * freq + lfo * np.sin(
+            if choose is 1:
+                waveform = np.sin(x * freq + lfo() * np.sin(
+                    fm * x + ramp_3_fm2()))
+            if choose is 2:
+                waveform = np.sin(x * freq + lfo_pluss() * np.sin(
                     fm * x + ramp_3_fm2()))
 
     if choose_noise is 1:
@@ -119,22 +136,23 @@ def play(save=False):
         waveform = waveform * tremelo()
 
     waveform = waveform * attenuation * vol
+    # Split into stereo by delaying right speaker by roller variable amount.
     waveform1 = np.roll(waveform, roller)
     waveform1[:roller] = 0
     waveform[- len(fade_ramp):] *= fade_ramp
     waveform1[- len(fade_ramp):] *= fade_ramp
     waveform_stereo = np.vstack((waveform, waveform1)).T
 
-    if save is True:
+    if save is True:            # Flag from set_save_flag_func.
         stamp = file_name.get()
-        if len(stamp) == 0:
+        if len(stamp) == 0:     # Then time stamp it!
             stamp = "NMT-{}.wav".format(str(time.ctime()[-16:].replace(" ", "-").replace(":", "-")))
         else:
             stamp = "{}.wav".format(stamp)
 
         write_waveform = np.int16(waveform_stereo * 32767)
         write(stamp, sample_rate, write_waveform)
-        #print('writing {}'.format(stamp))
+        # print('writing {}'.format(stamp))
 
         file_name.set("")
         play_button.update()
@@ -181,7 +199,7 @@ def gen_3():
         if n == 3:
             n = first_val
 
-# Toggling wave selector bool and setting button colors
+# Toggling wave selector boolian values and setting button colors
 
 
 def toggle_wave():
@@ -193,11 +211,13 @@ def toggle_wave():
 
 
 def toggle_lfo():
-    lfo_bool.set(next(g))
-    if lfo_bool.get() is False:
+    lfo_int.set(next(g))
+    if lfo_int.get() is 0:
         log_ramp_button.config(bg="#728C00", fg="white", text="FM1 Ramp")
-    if lfo_bool.get() is True:
+    if lfo_int.get() is 1:
         log_ramp_button.config(bg="#000000", fg="white", text="Sin LFO")
+    if lfo_int.get() is 2:
+        log_ramp_button.config(bg="#000000", fg="white", text="LFO Clip")
 
 
 def toggle_trem():
@@ -216,7 +236,7 @@ def toggle_fm2():
         fm2_button.config(bg="#000000", fg="white", text="FM2 Off")
 
 
-def select_noise():
+def select_noise():             # Three way push button.
     noise_int.set(next(g3))
     if noise_int.get() is 1:
         noise_button.config(bg="#728C00", fg="white", text="Noise >")
@@ -271,6 +291,7 @@ def device_window_func():
         device_num.set(-1)
 
     def driver_setter():
+        """ Sets output device arg for play func to get """
         try:
             num = int(device_entry.get())
             device_num.set(num)
@@ -355,7 +376,7 @@ def saver_window_func():
     save_button.grid(column=1, row=2, pady=20)
     cancel_button.grid(column=2, row=2, pady=20, padx=20)
 
-    #saver_window.protocol("WM_DELETE_WINDOW", on_cancel)
+    # saver_window.protocol("WM_DELETE_WINDOW", on_cancel)
     saver_window.lift()
 
 
@@ -391,7 +412,7 @@ def pickler_window_func():
         s11 = scale_noise_shape.get()
         s12 = scale_roll.get()
         s13 = scale_fade.get()
-        s14 = lfo_bool.get()    # log ramp/lfo
+        s14 = lfo_int.get()    # log ramp/lfo/lfo clip
         s15 = trem_bool.get()    # tremelo
         s16 = fm2_bool.get()    # fm2
         s17 = noise_int.get()  # noise
@@ -452,7 +473,7 @@ def set_stuff_func():
         set_window.destroy()
 
     def apply_settings():
-        """Get selected settings file, open and apply"""
+        """Get selected settings file, open and set variables from list"""
         if list_bx.curselection() is ():
             message_win("No File Selected", "Click on a file to select then Apply")
         else:
@@ -482,8 +503,8 @@ def set_stuff_func():
                     scale_noise_shape.set(go[11])
                     scale_roll.set(go[12])
                     scale_fade.set(go[13])
-                    if go[14] != lfo_bool.get():
-                        toggle_lfo()
+                    while lfo_int.get() != go[14]:
+                        toggle_lfo()                # Button clicking func.
                     if go[15] != trem_bool.get():
                         toggle_trem()
                     if go[16] != fm2_bool.get():
@@ -544,8 +565,9 @@ try:
     set_window = None
     ms_win = None
 
-    g = gen_1()
-    g1 = gen_1()
+    # assign generators.
+    g = gen_3()     # lfo
+    g1 = gen_1()    # trem
     g2 = gen_1()
     g3 = gen_3()
     g_wave = gen_1()
@@ -554,8 +576,8 @@ try:
     master.geometry("930x600")
     master.title('Noise Making Thingy')
 
-    lfo_bool = tk.BooleanVar()    # log/lfo
-    lfo_bool.set(False)
+    lfo_int = tk.IntVar()    # log/lfo
+    lfo_int.set(False)
     trem_bool = tk.BooleanVar()    # trem
     trem_bool.set(False)
     fm2_bool = tk.BooleanVar()    # fm2
@@ -591,7 +613,7 @@ try:
     noise_shape_label = tk.Label(master, text='Noise Shape')
     trem_speed_label = tk.Label(master, text='Trem Speed')
     vol_label = tk.Label(master, text='Volume')
-    trem_amount_label = tk.Label(master, text='Amount Trem')
+    trem_amount_label = tk.Label(master, text='Trem Amount')
     ring_label = tk.Label(master, text='Ring')
     roll_label = tk.Label(master, text='Delay')
     roll_units_label = tk.Label(master, text='1/44100')
@@ -699,3 +721,5 @@ try:
 
 except KeyboardInterrupt:
     print(' Come back soon')
+except Exception as e:
+    print(type(e).__name__ + ': ' + str(e))
