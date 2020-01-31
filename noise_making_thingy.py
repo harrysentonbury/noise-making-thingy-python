@@ -91,7 +91,7 @@ def play(save=False):
             if choose is 0:
                 waveform = triangle(ramp_2_osc())
             if choose is 1:
-                waveform = triangle(lfo_osc_wave())
+                waveform = triangle(lfo_osc_wave(lfo))
             if choose is 2:
                 waveform = triangle(lfo_osc_wave(lfo_pluss))
 
