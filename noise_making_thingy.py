@@ -260,6 +260,7 @@ def message_win_func(mtitle, blah):
     ms_win.title(mtitle)
     label = tk.Label(ms_win, text=blah, font='Times 20')
     button = tk.Button(ms_win, text='OK', width=6, bg="#728C00", fg="white", command=closer)
+    ms_win.bind('<Return>', lambda event=None: button.invoke())
 
     label.pack(padx=30, pady=10)
     button.pack(pady=20)
@@ -369,6 +370,7 @@ def saver_window_func():
     save_entry = tk.Entry(saver_window, textvariable=file_name)
     save_entry.focus()
     dot_wav_label = tk.Label(saver_window, text='.wav', bg='white', relief=tk.SUNKEN)
+    saver_window.bind('<Return>', lambda event=None: save_button.invoke())
 
     instruct_label.grid(column=0, row=0, columnspan=2, padx=20, pady=10)
     save_entry.grid(column=0, row=1, sticky='e')
@@ -442,10 +444,12 @@ def pickler_window_func():
     instruct_label = tk.Label(
         pickler_window, text='Enter a file name then click save', font='Times 20')
     pickle_namer_entry = tk.Entry(pickler_window, textvariable=pickle_file_name)
+    pickle_namer_entry.focus_set()
     dot_pickle_label = tk.Label(pickler_window, text='.pickle', bg='white', relief=tk.SUNKEN)
     pickle_save_button = tk.Button(pickler_window, text='Save',
                                    bg="#728C00", fg="white", command=save_stuff)
     cancel_button = tk.Button(pickler_window, text='Cancel', command=on_closing_pickler)
+    pickler_window.bind('<Return>', lambda event=None: pickle_save_button.invoke())
 
     instruct_label.grid(column=0, row=0, columnspan=3, padx=30, pady=10)
     pickle_namer_entry.grid(column=0, row=1, sticky='e', ipadx=20)
@@ -573,18 +577,18 @@ try:
     g_wave = gen_1()
 
     master = tk.Tk()
-    master.geometry("930x600")
+    master.geometry("930x640")
     master.title('Noise Making Thingy')
 
-    lfo_int = tk.IntVar()    # log/lfo
-    lfo_int.set(False)
-    trem_bool = tk.BooleanVar()    # trem
+    lfo_int = tk.IntVar()         # log/lfo
+    lfo_int.set(0)
+    trem_bool = tk.BooleanVar()   # trem
     trem_bool.set(False)
     fm2_bool = tk.BooleanVar()    # fm2
     fm2_bool.set(False)
-    noise_int = tk.IntVar()    # noise
+    noise_int = tk.IntVar()       # noise
     noise_int.set(0)
-    wave_bool = tk.BooleanVar()
+    wave_bool = tk.BooleanVar()   # wave shape
     wave_bool.set(False)
 
     device_num = tk.IntVar()
@@ -656,7 +660,8 @@ try:
     scale_noise_shape.set(-2.0)
     scale_roll.set(250)
 
-    play_button = tk.Button(master, text='Play', bg='#0ba4a4', height=3, width=7, command=play)
+    play_button = tk.Button(master, text='Play', bg='#0ba4a4',
+                            activebackground='#21e4e4', height=3, width=7, command=play)
     log_ramp_button = tk.Button(master, bg="#728C00", fg="white",
                                 text="FM1 Ramp", width=7, command=toggle_lfo)
     tremelo_button = tk.Button(master, bg="#000000", fg="white",
@@ -706,7 +711,7 @@ try:
     trem_amount_label.grid(column=3, row=3)
     scale_trem_amount.grid(column=4, row=3)
     ring_label.grid(column=5, row=3)
-    roll_label.grid(column=3, row=9)
+    roll_label.grid(column=3, row=9, pady=20, sticky='s')
     scale_roll.grid(column=4, row=9)
     roll_units_label.grid(column=5, row=9)
     fade_out_label.grid(column=3, row=10)
