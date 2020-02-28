@@ -284,6 +284,14 @@ def device_window_func():
     device_window.title('Device Selection')
     device_window.config(bg='#afb4b5')
 
+    def on_enter():
+        try:
+            device_entry.delete(0, last='end')
+            num = list_bx.curselection()[0]
+            device_entry.insert(0, num)
+        except IndexError:
+            message_win('IndexError', 'No Driver Selected')
+
     def close_devices():
         device_window.destroy()
 
@@ -321,6 +329,7 @@ def device_window_func():
     list_bx = tk.Listbox(device_window, yscrollcommand=scrollbar.set, width=60, height=25)
     for i in range(len(b)):
         list_bx.insert(tk.END, b[i])
+    device_window.bind('<Return>', lambda event=None: on_enter())
 
     label_0.grid(row=0, column=0, columnspan=2)
     list_bx.grid(row=1, column=0, columnspan=3)
