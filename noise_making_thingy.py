@@ -304,6 +304,7 @@ def device_window_func():
         try:
             num = int(device_entry.get())
             device_num.set(num)
+            message_win('Driver Set', 'Device number {} set as output device'.format(num))
         except ValueError:
             device_num.set(-1)
             device_entry.delete(0, last="end")
