@@ -284,34 +284,19 @@ def device_window_func():
     device_window.title('Device Selection')
     device_window.config(bg='#afb4b5')
 
-    def on_enter():
-        try:
-            device_entry.delete(0, last='end')
-            num = list_bx.curselection()[0]
-            device_entry.insert(0, num)
-        except IndexError:
-            message_win('IndexError', 'No Driver Selected')
-
     def close_devices():
         device_window.destroy()
 
     def reset_d():
-        device_entry.delete(0, last='end')
         device_num.set(-1)
 
     def driver_setter():
         """ Sets output device arg for play func to get """
-        try:
-            num = int(device_entry.get())
-            device_num.set(num)
-            message_win('Driver Set', 'Device number {} set as output device'.format(num))
-        except ValueError:
-            device_num.set(-1)
-            device_entry.delete(0, last="end")
-            if ms_win is not None:
-                ms_win.destroy()
-            message_win(mtitle="ValueError",
-                        blah="Must be integer number from list of available devices")
+        if ms_win is not None:
+            ms_win.destroy()
+        num = list_bx.curselection()[0]
+        device_num.set(num)
+        message_win('Driver Set', 'Device number {} set as output device'.format(num))
 
     a = repr(sd.query_devices())    # list ov i/o devices
     b = a.split("\n")
@@ -320,25 +305,24 @@ def device_window_func():
     label_0 = tk.Label(device_window, text='List of availible devices',
                        bg='#afb4b5', font='Times 20')
     scrollbar = tk.Scrollbar(device_window)
-    label_2 = tk.Label(dframe, text='Enter device number', bg='#afb4b5', font='Times 15')
-    set_device_button = tk.Button(dframe, text='Select', height=3,
+    label_2 = tk.Label(dframe, text='Select output device then set', bg='#afb4b5', font='Times 15')
+    set_device_button = tk.Button(dframe, text='Set', height=3, width=6, activebackground='#99c728',
                                   bg="#728C00", fg="white", command=driver_setter)
-    reset_button = tk.Button(device_window, text='Reset to Default Driver', command=reset_d)
-    device_entry = tk.Entry(dframe, width=10)
-    device_entry.focus_set()
+    reset_button = tk.Button(device_window, text='Reset to Default Device', command=reset_d)
+
     close_devices_button = tk.Button(device_window, text='Close', command=close_devices)
     list_bx = tk.Listbox(device_window, yscrollcommand=scrollbar.set, width=60, height=25)
     for i in range(len(b)):
         list_bx.insert(tk.END, b[i])
-    device_window.bind('<Return>', lambda event=None: on_enter())
+    device_window.bind('<Return>', lambda event=None: driver_setter())
 
     label_0.grid(row=0, column=0, columnspan=2)
     list_bx.grid(row=1, column=0, columnspan=3)
     scrollbar.grid(row=1, column=3, sticky=tk.N+tk.S)
-    label_2.grid(row=2, column=0, sticky='ne', pady=8, padx=5)
+    label_2.grid(row=2, column=0, columnspan=2, pady=8, padx=5)
     dframe.grid(row=2, column=0, rowspan=2, columnspan=2, sticky='w', pady=5, padx=20)
-    set_device_button.grid(row=3, column=1, sticky='w', pady=5, padx=5)
-    device_entry.grid(row=2, column=1, sticky='w', pady=8, padx=5)
+    set_device_button.grid(row=3, column=1, pady=5, padx=5)
+
     reset_button.grid(row=4, column=1, sticky='w', pady=8)
     close_devices_button.grid(row=3, column=2, sticky='w')
     scrollbar.config(command=list_bx.yview)
