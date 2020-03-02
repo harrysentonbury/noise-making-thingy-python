@@ -1,3 +1,4 @@
+#!/usr/bin/env python3
 
 """ Python thingy, a bit like a synthesizer """
 
@@ -534,6 +535,7 @@ def set_stuff_func():
     for entry in os.scandir(d):
         if not entry.name.startswith('.') and entry.name.endswith('.pickle') and entry.is_file():
             list_bx.insert(tk.END, entry.name)
+    set_window.bind('<Return>', lambda event=None: apply_settings())
 
     set_window.lift()
 
