@@ -174,8 +174,8 @@ def play(save=False):
                 ms_win.destroy()
             device_l()
             message_win(
-                "PortAudioError", """Driver id not valid! Type id number from the list.
-                 Or Click Reset to Default Driver""")
+                "PortAudioError", """Driver not valid! Click on or select
+                 device from the list. Or Click Reset to Default Driver""")
 
         play_button.update()                    # Enable play again.
         play_button.config(text="Play", state="normal")
@@ -290,6 +290,9 @@ def device_window_func():
 
     def reset_d():
         device_num.set(-1)
+        if ms_win is not None:
+            ms_win.destroy()
+        message_win("Default Device", "Device set to default")
 
     def driver_setter():
         """ Sets output device arg for play func to get """
@@ -320,7 +323,7 @@ def device_window_func():
     label_0.grid(row=0, column=0, columnspan=2)
     list_bx.grid(row=1, column=0, columnspan=3)
     scrollbar.grid(row=1, column=3, sticky=tk.N+tk.S)
-    label_2.grid(row=2, column=0, columnspan=2, pady=8, padx=5)
+    label_2.grid(row=2, column=0, sticky='ne', pady=8, padx=5)
     dframe.grid(row=2, column=0, rowspan=2, columnspan=2, sticky='w', pady=5, padx=20)
     set_device_button.grid(row=3, column=1, pady=5, padx=5)
 
