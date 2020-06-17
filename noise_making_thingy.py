@@ -48,7 +48,7 @@ def play(save=False):
 
     def lfo_pluss():
         y = np.sin(x * speed) * 2 + 1
-        yy = np.clip(y, 0.0, 1) * lfo_amount
+        yy = np.clip(y, 0.2, 1) * lfo_amount
         return yy
 
     freq = float(scale_freq.get())
@@ -78,7 +78,8 @@ def play(save=False):
     choose_wave = wave_bool.get()
 
     ramp_3 = np.ones(len(x))
-    ramp_3_ramp = np.logspace(1, 0, int(duration * sample_rate // ramp3_divizor))
+    ramp_3_ramp = np.logspace(
+        1, 0, int(duration * sample_rate // ramp3_divizor))
 
     ramp_0 = np.logspace(noise_shape, 1, total_samples, base=5)
     ramp_1 = np.logspace(1, noise_shape, total_samples, base=5)
@@ -91,19 +92,19 @@ def play(save=False):
         if choose_fm2 is False:
             if choose is 0:
                 waveform = triangle(ramp_2_osc())
-            if choose is 1:
+            elif choose is 1:
                 waveform = triangle(lfo_osc_wave(lfo))
-            if choose is 2:
+            else:
                 waveform = triangle(lfo_osc_wave(lfo_pluss))
 
         if choose_fm2 is True:
             if choose is 0:
                 waveform = 2 / np.pi * np.arcsin(np.sin(x * freq + ramp_2 * 2 / np.pi * np.arcsin(
                     np.sin(x * fm + ramp_3_fm2()))))
-            if choose is 1:
+            elif choose is 1:
                 waveform = 2 / np.pi * np.arcsin(np.sin(x * freq + lfo() * 2 / np.pi * np.arcsin(
                     np.sin(x * fm + ramp_3_fm2()))))   # bollox
-            if choose is 2:
+            else:
                 waveform = 2 / np.pi * np.arcsin(np.sin(x * freq + lfo_pluss() * 2 / np.pi * np.arcsin(
                     np.sin(x * fm + ramp_3_fm2()))))   # bollox
 
@@ -111,19 +112,19 @@ def play(save=False):
         if choose_fm2 is False:
             if choose is 0:
                 waveform = sine_wave(ramp_2_osc())
-            if choose is 1:
+            elif choose is 1:
                 waveform = sine_wave(lfo_osc_wave(lfo))
-            if choose is 2:
+            else:
                 waveform = sine_wave(lfo_osc_wave(lfo_pluss))
 
         if choose_fm2 is True:
             if choose is 0:
                 waveform = np.sin(x * freq + ramp_2 * np.sin(
                     fm * x + ramp_3_fm2()))
-            if choose is 1:
+            elif choose is 1:
                 waveform = np.sin(x * freq + lfo() * np.sin(
                     fm * x + ramp_3_fm2()))
-            if choose is 2:
+            else:
                 waveform = np.sin(x * freq + lfo_pluss() * np.sin(
                     fm * x + ramp_3_fm2()))
 
@@ -147,7 +148,8 @@ def play(save=False):
     if save is True:            # Flag from set_save_flag_func.
         stamp = file_name.get()
         if len(stamp) == 0:     # Then time stamp it!
-            stamp = "NMT-{}.wav".format(str(time.ctime()[-16:].replace(" ", "-").replace(":", "-")))
+            stamp = "NMT-{}.wav".format(str(time.ctime()
+                                            [-16:].replace(" ", "-").replace(":", "-")))
         else:
             stamp = "{}.wav".format(stamp)
 
@@ -260,7 +262,8 @@ def message_win_func(mtitle, blah):
     ms_win = tk.Toplevel(master)
     ms_win.title(mtitle)
     label = tk.Label(ms_win, text=blah, font='Times 20')
-    button = tk.Button(ms_win, text='OK', width=6, bg="#728C00", fg="white", command=closer)
+    button = tk.Button(ms_win, text='OK', width=6,
+                       bg="#728C00", fg="white", command=closer)
     ms_win.bind('<Return>', lambda event=None: button.invoke())
 
     label.pack(padx=30, pady=10)
@@ -300,7 +303,8 @@ def device_window_func():
             ms_win.destroy()
         num = list_bx.curselection()[0]
         device_num.set(num)
-        message_win('Driver Set', 'Device number {} set as output device'.format(num))
+        message_win(
+            'Driver Set', 'Device number {} set as output device'.format(num))
 
     a = repr(sd.query_devices())    # list ov i/o devices
     b = a.split("\n")
@@ -309,22 +313,27 @@ def device_window_func():
     label_0 = tk.Label(device_window, text='List of availible devices',
                        bg='#afb4b5', font='Times 20')
     scrollbar = tk.Scrollbar(device_window)
-    label_2 = tk.Label(dframe, text='Select output device then set', bg='#afb4b5', font='Times 15')
+    label_2 = tk.Label(
+        dframe, text='Select output device then set', bg='#afb4b5', font='Times 15')
     set_device_button = tk.Button(dframe, text='Set', height=3, width=6, activebackground='#99c728',
                                   bg="#728C00", fg="white", command=driver_setter)
-    reset_button = tk.Button(device_window, text='Reset to Default Device', command=reset_d)
+    reset_button = tk.Button(
+        device_window, text='Reset to Default Device', command=reset_d)
 
-    close_devices_button = tk.Button(device_window, text='Close', command=close_devices)
-    list_bx = tk.Listbox(device_window, yscrollcommand=scrollbar.set, width=60, height=25)
+    close_devices_button = tk.Button(
+        device_window, text='Close', command=close_devices)
+    list_bx = tk.Listbox(
+        device_window, yscrollcommand=scrollbar.set, width=60, height=25)
     for i in range(len(b)):
         list_bx.insert(tk.END, b[i])
     device_window.bind('<Return>', lambda event=None: driver_setter())
 
     label_0.grid(row=0, column=0, columnspan=2)
     list_bx.grid(row=1, column=0, columnspan=3)
-    scrollbar.grid(row=1, column=3, sticky=tk.N+tk.S)
+    scrollbar.grid(row=1, column=3, sticky=tk.N + tk.S)
     label_2.grid(row=2, column=0, sticky='ne', pady=8, padx=5)
-    dframe.grid(row=2, column=0, rowspan=2, columnspan=2, sticky='w', pady=5, padx=20)
+    dframe.grid(row=2, column=0, rowspan=2, columnspan=2,
+                sticky='w', pady=5, padx=20)
     set_device_button.grid(row=3, column=1, pady=5, padx=5)
 
     reset_button.grid(row=4, column=1, sticky='w', pady=8)
@@ -367,7 +376,8 @@ def saver_window_func():
     cancel_button = tk.Button(saver_window, text='Cancel', command=on_cancel)
     save_entry = tk.Entry(saver_window, textvariable=file_name)
     save_entry.focus()
-    dot_wav_label = tk.Label(saver_window, text='.wav', bg='white', relief=tk.SUNKEN)
+    dot_wav_label = tk.Label(saver_window, text='.wav',
+                             bg='white', relief=tk.SUNKEN)
     saver_window.bind('<Return>', lambda event=None: save_button.invoke())
 
     instruct_label.grid(column=0, row=0, columnspan=2, padx=20, pady=10)
@@ -441,13 +451,17 @@ def pickler_window_func():
 
     instruct_label = tk.Label(
         pickler_window, text='Enter a file name then click save', font='Times 20')
-    pickle_namer_entry = tk.Entry(pickler_window, textvariable=pickle_file_name)
+    pickle_namer_entry = tk.Entry(
+        pickler_window, textvariable=pickle_file_name)
     pickle_namer_entry.focus_set()
-    dot_pickle_label = tk.Label(pickler_window, text='.pickle', bg='white', relief=tk.SUNKEN)
+    dot_pickle_label = tk.Label(
+        pickler_window, text='.pickle', bg='white', relief=tk.SUNKEN)
     pickle_save_button = tk.Button(pickler_window, text='Save',
                                    bg="#728C00", fg="white", command=save_stuff)
-    cancel_button = tk.Button(pickler_window, text='Cancel', command=on_closing_pickler)
-    pickler_window.bind('<Return>', lambda event=None: pickle_save_button.invoke())
+    cancel_button = tk.Button(
+        pickler_window, text='Cancel', command=on_closing_pickler)
+    pickler_window.bind(
+        '<Return>', lambda event=None: pickle_save_button.invoke())
 
     instruct_label.grid(column=0, row=0, columnspan=3, padx=30, pady=10)
     pickle_namer_entry.grid(column=0, row=1, sticky='e', ipadx=20)
@@ -477,7 +491,8 @@ def set_stuff_func():
     def apply_settings():
         """Get selected settings file, open and set variables from list"""
         if list_bx.curselection() is ():
-            message_win("No File Selected", "Click on a file to select then Apply")
+            message_win("No File Selected",
+                        "Click on a file to select then Apply")
         else:
             item = list_bx.get(list_bx.curselection())
 
@@ -524,15 +539,17 @@ def set_stuff_func():
     set_window = tk.Toplevel(master)
     set_window.title('Recall settings')
     scrollbar = tk.Scrollbar(set_window)
-    list_bx = tk.Listbox(set_window, yscrollcommand=scrollbar.set, width=60, height=20)
-    button_close = tk.Button(set_window, text='Close', command=cancel_set_window)
+    list_bx = tk.Listbox(
+        set_window, yscrollcommand=scrollbar.set, width=60, height=20)
+    button_close = tk.Button(set_window, text='Close',
+                             command=cancel_set_window)
     button_apply = tk.Button(set_window, text='Apply', bg="#728C00",
                              fg="white", command=apply_settings)
 
     list_bx.grid(column=0, row=0, columnspan=2)
     button_apply.grid(column=0, row=1, pady=10)
     button_close.grid(column=1, row=1, pady=10)
-    scrollbar.grid(column=2, row=0, sticky=tk.N+tk.S)
+    scrollbar.grid(column=2, row=0, sticky=tk.N + tk.S)
     scrollbar.config(command=list_bx.yview)
     d = os.getcwd()
     for entry in os.scandir(d):
@@ -621,9 +638,12 @@ try:
     roll_label = tk.Label(master, text='Delay')
     roll_units_label = tk.Label(master, text='1/44100')
 
-    scale_freq = tk.Scale(master, from_=50, to=510, resolution=5, orient=tk.HORIZONTAL, length=250)
-    scale_fm = tk.Scale(master, from_=10, to=250, resolution=5, orient=tk.HORIZONTAL, length=250)
-    scale_fm2 = tk.Scale(master, from_=40, to=400, resolution=5, orient=tk.HORIZONTAL, length=250)
+    scale_freq = tk.Scale(master, from_=50, to=510,
+                          resolution=5, orient=tk.HORIZONTAL, length=250)
+    scale_fm = tk.Scale(master, from_=10, to=250,
+                        resolution=5, orient=tk.HORIZONTAL, length=250)
+    scale_fm2 = tk.Scale(master, from_=40, to=400,
+                         resolution=5, orient=tk.HORIZONTAL, length=250)
     scale_speed = tk.Scale(master, from_=0.02, to=5, resolution=0.02,
                            orient=tk.HORIZONTAL, length=250)
     scale_lfo_amount = tk.Scale(master, from_=1.0, to=5.0, resolution=0.1,
@@ -650,7 +670,8 @@ try:
                                 orient=tk.HORIZONTAL, length=200)
     scale_trem_amount = tk.Scale(master, from_=0.0, to=1.0, resolution=0.01,
                                  orient=tk.HORIZONTAL, length=200)
-    scale_roll = tk.Scale(master, from_=0, to=4410, resolution=50, orient=tk.HORIZONTAL, length=200)
+    scale_roll = tk.Scale(master, from_=0, to=4410,
+                          resolution=50, orient=tk.HORIZONTAL, length=200)
     scale_fade = tk.Scale(master, from_=0.0, to=0.5, resolution=0.01,
                           orient=tk.HORIZONTAL, length=200)
     scale_vol.set(0.7)
@@ -671,7 +692,8 @@ try:
                              text='Noise', width=6, command=select_noise)
     wave_button = tk.Button(master, bg="#000000", fg="white",
                             text='Sine', width=10, command=toggle_wave)
-    stop_button = tk.Button(master, bg="#728C00", fg="white", text='Stop', width=7, command=stop_it)
+    stop_button = tk.Button(master, bg="#728C00",
+                            fg="white", text='Stop', width=7, command=stop_it)
 
     freq_labal.grid(column=0, row=1)
     fm_labal.grid(column=0, row=2)
