@@ -23,6 +23,9 @@ Or just save the settings to be recalled later. These options are on the menu ba
 Also from the menu bar you can open dialogue to set a different output device like
 a usb audio interface for instance.
 
+If the frequency Hz, FM 1 HZ and FM 2 Hz setting values divide into each other it sounds
+very relaxing ambient. If they don't, you got sci fi adrenaline. 
+
 ## python3
 
 ### dependences
