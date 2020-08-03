@@ -302,12 +302,13 @@ def device_window_func():
         if ms_win is not None:
             ms_win.destroy()
         num = list_bx.curselection()[0]
+        num_name = sd.query_devices()[num].get('name')
         device_num.set(num)
         message_win(
-            'Driver Set', 'Device number {} set as output device'.format(num))
+            'Driver Set', 'Device number {} ({}) \n set as output device'.format(num, num_name))
 
-    a = repr(sd.query_devices())    # list ov i/o devices
-    b = a.split("\n")
+    query = repr(sd.query_devices())    # list ov i/o devices
+    query = query.split("\n")
 
     dframe = tk.Frame(device_window, relief=tk.RAISED, bd=2, bg='#afb4b5')
     label_0 = tk.Label(device_window, text='List of availible devices',
@@ -324,8 +325,8 @@ def device_window_func():
         device_window, text='Close', command=close_devices)
     list_bx = tk.Listbox(
         device_window, yscrollcommand=scrollbar.set, width=60, height=25)
-    for i in range(len(b)):
-        list_bx.insert(tk.END, b[i])
+    for i in range(len(query)):
+        list_bx.insert(tk.END, query[i])
     device_window.bind('<Return>', lambda event=None: driver_setter())
 
     label_0.grid(row=0, column=0, columnspan=2)
@@ -572,8 +573,12 @@ def set_stuff():
 
 def on_closing():
     if messagebox.askokcancel("Quit", "Do you want to quit? "):
-        sd.stop()
-        master.destroy()
+        quit()
+
+
+def quit():
+    sd.stop()
+    master.destroy()
 
 
 try:
@@ -694,6 +699,7 @@ try:
                             text='Sine', width=10, command=toggle_wave)
     stop_button = tk.Button(master, bg="#728C00",
                             fg="white", text='Stop', width=7, command=stop_it)
+    quit_button = tk.Button(master, text='Quit', width=7, command=quit)
 
     freq_labal.grid(column=0, row=1)
     fm_labal.grid(column=0, row=2)
@@ -723,6 +729,7 @@ try:
     tremelo_button.grid(column=2, row=2)
     fm2_button.grid(column=2, row=3)
     noise_button.grid(column=2, row=4)
+    quit_button.grid(column=2, row=7)
     wave_button.grid(column=4, row=0)
 
     noise_shape_label.grid(column=3, row=4)
