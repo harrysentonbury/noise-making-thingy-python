@@ -301,11 +301,17 @@ def device_window_func():
         """ Sets output device arg for play func to get """
         if ms_win is not None:
             ms_win.destroy()
-        num = list_bx.curselection()[0]
-        num_name = sd.query_devices()[num].get('name')
-        device_num.set(num)
-        message_win(
-            'Driver Set', 'Device number {} ({}) \n set as output device'.format(num, num_name))
+        if list_bx.curselection() == ():
+            message_win(
+                'Oi!', '''Select a device \n from the list or cancel
+                ''')
+            return
+        else:
+            num = list_bx.curselection()[0]
+            num_name = sd.query_devices()[num].get('name')
+            device_num.set(num)
+            message_win(
+                'Driver Set', 'Device number {} ({}) \n set as output device'.format(num, num_name))
 
     query = repr(sd.query_devices())    # list ov i/o devices
     query = query.split("\n")
@@ -327,6 +333,7 @@ def device_window_func():
         device_window, yscrollcommand=scrollbar.set, width=60, height=25)
     for i in range(len(query)):
         list_bx.insert(tk.END, query[i])
+    list_bx.selection_set(tk.END)
     device_window.bind('<Return>', lambda event=None: driver_setter())
 
     label_0.grid(row=0, column=0, columnspan=2)
