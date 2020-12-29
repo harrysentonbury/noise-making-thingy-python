@@ -1,5 +1,8 @@
 #!/usr/bin/env python3
 
+# Copyright (C) 2020 Harry Sentonbury
+# GNU General Public License v3.0
+
 """ Python thingy, a bit like a synthesizer """
 
 import numpy as np
@@ -202,7 +205,7 @@ def gen_3():
         if n == 3:
             n = first_val
 
-# Toggling wave selector boolian values and setting button colors
+# Toggling wave selector boolean values and setting button colors
 
 
 def toggle_wave():
